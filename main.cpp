@@ -80,6 +80,15 @@ struct orbital
         old_pos = pos - dir.norm() * speed * dt_s;
     }
 
+    ///amount in ms
+    void accelerate_relative_to_velocity(double amount, float angle_offset, float time_s)
+    {
+        vec2d vel_dir = (pos - old_pos).norm();
+
+        ///the directional part of this is wrong
+        acc = acc + vel_dir.rot(angle_offset) * amount * time_s * time_s;
+    }
+
     orbital(double _mass, double _distance, double _speed)
     {
         mass = _mass;
@@ -169,6 +178,11 @@ struct manager
                 vec2d r12 = o2->pos - o1->pos;
 
                 double r12l = r12.length_d();
+
+                ///???
+                ///radius of jupiter
+                if(r12l < 69911 * pow(10, 3))
+                    r12l = 69911 * pow(10, 3);
 
                 vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * (r12.norm() * G);
 
@@ -263,7 +277,7 @@ struct manager
         tex.display();
     }
 
-    vector<vector<vec2d>> test(int ticks, sf::RenderWindow& tex, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>())
+    vector<vector<vec2d>> test(int ticks, sf::RenderWindow& tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>())
     {
         std::vector<orbital> old;
 
@@ -279,7 +293,7 @@ struct manager
 
         vector<vector<vec2d>> test_ret;
 
-        if(test_orbital)
+        //if(test_orbital)
         {
             test_ret.resize(info_to_retrieve.size() + 1);
 
@@ -289,14 +303,14 @@ struct manager
             }
         }
 
-
         for(int i=0; i<ticks; i++)
         {
             tick();
 
-            display(tex);
+            if(render)
+                display(tex);
 
-            if(i % 1 == 0)
+            if(i % 1 == 0 && render)
             {
                 tex.display();
                 tex.clear();
@@ -309,7 +323,7 @@ struct manager
 
             for(auto& j : olist)
             {
-                for(int k=0; k<info_to_retrieve.size(); i++)
+                for(int k=0; k<info_to_retrieve.size(); k++)
                 {
                     if(j == info_to_retrieve[k])
                     {
@@ -324,7 +338,6 @@ struct manager
             destroy(my_test);
         }
 
-
         for(int i=0; i<olist.size(); i++)
         {
             *olist[i] = old[i];
@@ -333,11 +346,25 @@ struct manager
         return test_ret;
     }
 
-    void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win)
+    void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1})
     {
         vec2d pos = elements[which_element][which_tick];
 
+        draw(pos, col, win, 4);
+    }
 
+    void plot_all(const vector<vector<vec2d>>& elements, int which_tick, sf::RenderWindow& win, vector<vec3f> cols = vector<vec3f>())
+    {
+        //for(auto& i : elements)
+        for(int i=0; i<elements.size(); i++)
+        {
+            vec3f col = {1,1,1};
+
+            if(i < cols.size())
+                col = cols[i];
+
+            plot(elements, i, which_tick, win, col);
+        }
     }
 };
 
@@ -412,6 +439,8 @@ int main()
 
     int predefined_max_tick = 40000;
 
+    vector<vector<vec2d>> last_experiment;
+
     while(win.isOpen())
     {
         float dmouse = 0;
@@ -472,7 +501,33 @@ int main()
 
         if(once<sf::Mouse::Right>())
         {
-            orbital_manager.test(10000, win);
+            orbital voyager_probe = *earth;
+            voyager_probe.mass = 721.9;
+            voyager_probe.col = {1, 0, 0};
+            voyager_probe.accelerate_relative_to_velocity(1.f, 0, 12000 / 2);
+
+            last_experiment = orbital_manager.test(10000, win, false, &voyager_probe, {earth});
+
+            ///tomorrow's homework
+            ///shoot probes out in all directions, see which ones come closest to target
+            for(int i=0; i<10000; i++)
+            {
+                orbital_manager.plot_all(last_experiment, i, win, {{1, 0, 0}, earth->col});
+
+                win.display();
+
+                win.clear();
+            }
+
+            //system("pause");
+
+            /*for(int j=0; j<last_experiment[1].size(); j++)
+            {
+                orbital_manager.plot(last_experiment, 1, j, win);
+
+                win.display();
+                win.clear(sf::Color(0,0,0));
+            }*/
         }
 
         if(key.isKeyPressed(sf::Keyboard::Escape))
