@@ -22,6 +22,17 @@
 				<Option compiler="mingw64" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-march=native" />
+					<Add option="-msse" />
+					<Add option="-msse2" />
+					<Add option="-msse3" />
+					<Add option="-msse4.2" />
+					<Add option="-ftree-vectorize" />
+					<Add option="-m3dnow" />
+					<Add option="-mavx" />
+					<Add option="-msse2avx" />
+					<Add option="-Ofast" />
+					<Add option="-maccumulate-outgoing-args" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -31,7 +42,15 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add option="-std=gnu++14" />
+			<Add option="-Wno-sign-compare" />
+			<Add option="-Wno-unused-variable" />
 		</Compiler>
+		<Linker>
+			<Add option="-lsfml-graphics" />
+			<Add option="-lsfml-window" />
+			<Add option="-lsfml-system" />
+		</Linker>
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

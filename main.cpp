@@ -53,7 +53,7 @@ bool once()
 
 typedef vec<2, double> vec2d;
 
-double dt_s = 12000 / 5;
+double dt_s = 12000 / 1;
 double dt_old = dt_s;
 
 
@@ -74,7 +74,7 @@ struct orbital
 
     void set_speed(double speed)
     {
-        old_pos = perpendicular(pos).norm() * speed * pow(dt_s, 1.) + pos;
+        old_pos = perpendicular(pos).norm() * speed * dt_s + pos;
     }
 
     void set_speed(double speed, vec2d dir)
@@ -165,7 +165,7 @@ struct manager
         return pos;
     }
 
-    void tick()
+    void tick(float dt_cur, float dt_old)
     {
         for(int i=0; i<(int)olist.size(); i++)
         {
@@ -179,7 +179,7 @@ struct manager
 
                 double G = 0.0000000000674;
 
-                vec2d r12 = o2->pos - o1->pos;
+                vec2d r12 = (o2->pos - o1->pos);
 
                 double r12l = r12.length_d();
 
@@ -188,17 +188,22 @@ struct manager
                 if(r12l < 69911 * pow(10, 3))
                     r12l = 69911 * pow(10, 3);
 
+
                 vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * (r12.norm() * G);
 
+                //vec2f df12 = conv<double, float, 2>(F12);
+
+                vec2d df12 = F12;
+
                 ///so its own mass cancels out in the change in velocity calvulations
-                vec2d aF12 = -F12 / o1->mass;
-                vec2d bF12 =  F12 / o2->mass;
+                vec2d aF12 = -df12 / o1->mass;
+                vec2d bF12 =  df12 / o2->mass;
 
-                aF12 = aF12 * dt_s * dt_s;
-                bF12 = bF12 * dt_s * dt_s;
+                aF12 = aF12 * dt_cur * dt_cur;
+                bF12 = bF12 * dt_cur * dt_cur;
 
-                o1->acc += aF12;
-                o2->acc += bF12;
+                o1->acc += (aF12);
+                o2->acc += (bF12);
             }
         }
 
@@ -206,7 +211,7 @@ struct manager
         {
             vec2d o_pos = i->pos;
 
-            i->pos = i->pos + (i->pos - i->old_pos) + i->acc;
+            i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc;
 
             i->old_pos = o_pos;
 
@@ -249,15 +254,15 @@ struct manager
         }
     }
 
-    void simulate(int ticks)
+    void simulate(int ticks, float dt_cur, float dt_old)
     {
         for(int i=0; i<ticks; i++)
         {
-            tick();
+            tick(dt_cur, dt_old);
         }
     }
 
-    void smear(int ticks, sf::RenderTexture& tex)
+    /*void smear(int ticks, sf::RenderTexture& tex)
     {
         std::vector<orbital> old;
 
@@ -279,9 +284,9 @@ struct manager
         }
 
         tex.display();
-    }
+    }*/
 
-    vector<vector<vec2d>> test(int ticks, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>())
+    vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>())
     {
         std::vector<orbital> old;
 
@@ -309,7 +314,10 @@ struct manager
 
         for(int i=0; i<ticks; i++)
         {
-            tick();
+            if(i == 0)
+                tick(dt_cur, dt_old);
+            else
+                tick(dt_cur, dt_cur);
 
             if(render)
                 display(*tex);
@@ -350,32 +358,6 @@ struct manager
         return test_ret;
     }
 
-    ///returns the tick where the two objects are closest
-    /*int get_minimum_distance(int ticks, orbital* test_orbital, orbital* target_orbital)
-    {
-        vector<vector<vec2d>> result = test(ticks, nullptr, false, test_orbital, {target_orbital});
-
-        int min_tick = -1;
-
-        double min_len = DBL_MAX;
-
-        for(int tnum=0; tnum<result[0].size(); tnum++)
-        {
-            ///test
-            vec2d d1 = result[0][tnum];
-            ///target
-            vec2d d2 = result[1][tnum];
-
-            if((d1 - d2).length() < min_len)
-            {
-                min_len = (d1 - d2).length();
-                min_tick = tnum;
-            }
-        }
-
-        return min_tick;
-    }*/
-
     int get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos)
     {
         int min_tick = -1;
@@ -405,7 +387,7 @@ struct manager
         int mtick;
     };
 
-    ret_info bisect(int ticks, float base_speed, float minimum, float maximum, int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0)
+    ret_info bisect(int ticks, float dt_cur, float dt_old, float base_speed, float minimum, float maximum, int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0)
     {
         int which_id = -1;
 
@@ -421,9 +403,6 @@ struct manager
         if(which_id == -1)
         {
             info_to_retrieve.insert(info_to_retrieve.begin(), target_orbital);
-
-            //info_to_retrieve.push_back(target_orbital);
-            //which_id = info_to_retrieve.size();
 
             which_id = 1;
         }
@@ -448,10 +427,10 @@ struct manager
             double speed = base_speed / cur;
 
 
-            probe.accelerate_relative_to_velocity(1.f, 0, speed);
+            probe.accelerate_relative_to_velocity(speed, 0, 1200);
 
 
-            auto last_experiment = this->test(ticks, nullptr, false, &probe, info_to_retrieve);
+            auto last_experiment = this->test(ticks, dt_cur, dt_old, nullptr, false, &probe, info_to_retrieve);
 
             int mtick = this->get_minimum_distance(0, which_id, last_experiment);
 
@@ -480,7 +459,7 @@ struct manager
 
         if(c+1 < depth)
         {
-            return bisect(ticks, base_speed, found_mod - step/2, found_mod + step/2, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
+            return bisect(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
         }
 
         return {backup, saved_mtick};
@@ -515,6 +494,7 @@ int main()
 {
     sf::RenderWindow win;
     win.create(sf::VideoMode(1200, 800), "hi");
+    //win.setVerticalSyncEnabled(true);
 
     manager orbital_manager;
 
@@ -529,14 +509,6 @@ int main()
 
     earth->col = {0.2f, 0.2f, 1.f};
 
-    //earth->mass = 5.972 * pow(10., 24.);
-
-    //earth->pos = {149.6 * 1000 * 1000 * 1000, 0};
-
-    //const double earth_speed_ms = 30. * 1000;
-
-    //earth->set_speed(earth_speed_ms);
-
     std::cout << "pos " << earth->pos <<  " opos " << earth->old_pos << std::endl;
 
     orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3)));
@@ -546,15 +518,20 @@ int main()
     orbital* mars = orbital_manager.make_new(orbital(6.42 * pow(10, 23), 227.9 * pow(10, 9), 24.077 * pow(10, 3), 3390 * pow(10, 3)));
 
 
-    orbital* jupiter = orbital_manager.make_new(orbital(1.9 * pow(10, 27), 778.3 * pow(10, 9), 13.07 * pow(10, 3)));
+    orbital* jupiter = orbital_manager.make_new(orbital(1.9 * pow(10, 27), 778.3 * pow(10, 9), 13.07 * pow(10, 3), 69911 * pow(10, 3)));
 
-    orbital* saturn = orbital_manager.make_new(orbital(5.69 * pow(10, 26), 1427. * pow(10, 9), 9.69 * pow(10, 3)));
+    orbital* saturn = orbital_manager.make_new(orbital(5.69 * pow(10, 26), 1427. * pow(10, 9), 9.69 * pow(10, 3), 58232 * pow(10, 3)));
 
     ///hehe. I get to laugh at uranus because I wrote this
-    orbital* uranus = orbital_manager.make_new(orbital(8.68 * pow(10, 25), 2861. * pow(10, 9), 6.81 * pow(10, 3)));
+    orbital* uranus = orbital_manager.make_new(orbital(8.68 * pow(10, 25), 2861. * pow(10, 9), 6.81 * pow(10, 3), 25362 * pow(10, 3)));
 
-    orbital* neptune = orbital_manager.make_new(orbital(1.02 * pow(10, 26), 4497.1 * pow(10, 9), 5.43 * pow(10, 3)));
+    orbital* neptune = orbital_manager.make_new(orbital(1.02 * pow(10, 26), 4497.1 * pow(10, 9), 5.43 * pow(10, 3), 24622 * pow(10, 3)));
 
+    ///we will define pluto at its closest point to the sun, ie smallest distance + largest velocity
+    ///the eccentricity will not be correct relative the other planets, but as they're all perfect circles that's just dandy at the moment
+    ///we need everything's rotation from the centre, /time offset, whatever its called
+    ///nope, make it aphelion, otherwise its inside neptune
+    orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
 
     /*sf::RenderTexture orbits;
     orbits.create(win.getSize().x, win.getSize().y);
@@ -639,83 +616,41 @@ int main()
             getrekd->set_speed(13.07 * pow(10, 3) * 10, {0, -1});
         }*/
 
+        ///need to fiddle with constant acceleration rather than impulse
+        ///although then again, do I?
         if(once<sf::Mouse::Right>())
         {
             orbital voyager_probe = *earth;
             voyager_probe.mass = 721.9;
             voyager_probe.col = {1, 0, 0};
 
-            float base_speed = 12000;
-
-            /*voyager_probe.accelerate_relative_to_velocity(1.f, 0, base_speed / 1.5);
-
-            int tnum = 15000;
-
-            last_experiment = orbital_manager.test(tnum, &win, false, &voyager_probe, {earth, mars});*/
-
-            /*int tnum = 30000;
-
-            int test_nums = 100;
+            float base_speed = dt_s;
 
 
-            double min_min = DBL_MAX;
-            double f_acc = 0.;
-            int saved_mtick = -1;
+            sf::Clock clk;
 
-            //float min_acc = 1.0;
-            //float max_acc = 2.0;
+            int tnum = 100000;
 
-            float min_acc = 1.193;
-            float max_acc = 1.195;
+            ///keep this one simply because its awesome
+            //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
 
-            vector<vector<vec2d>> backup;
+            ///include a time to fire variable, wait that long then fire
+            ///need a variable timestep before that is viable
 
-            for(int i=0; i<test_nums; i++)
-            {
-                orbital voyager_probe_this = voyager_probe;
+            float timestep = dt_s * 3;
 
-                float ifrac = (float)i / test_nums;
-
-                double cur = (max_acc - min_acc) * ifrac + min_acc;
-
-                double speed = base_speed / cur;
-
-
-                voyager_probe_this.accelerate_relative_to_velocity(1.f, 0, speed);
-
-
-                last_experiment = orbital_manager.test(tnum, &win, false, &voyager_probe_this, {earth, mars});
-
-                int mtick = orbital_manager.get_minimum_distance(0, 2, last_experiment);
-
-
-                vec2d min_voyager = last_experiment[0][mtick];
-                vec2d min_mars = last_experiment[2][mtick];
-
-                if((min_mars - min_voyager).length() < mars->radius)
-                {
-                    printf("HIT\n");
-                }
-
-                if((min_mars - min_voyager).length() < min_min)
-                {
-                    min_min = (min_mars - min_voyager).length();
-                    f_acc = cur;
-                    backup = last_experiment;
-                    saved_mtick = mtick;
-                }
-            }
-
-            printf("%f min_min %f speed\n", min_min / 1000. / 1000. / 1000., f_acc);
-            printf("%f target radius in millionkm\n", mars->radius / 1000. / 1000. / 1000);*/
-
-            int tnum = 40000;
-
-            auto info = orbital_manager.bisect(tnum, 12000, 0.5, 5.0, 20, 5, &voyager_probe, mars, {earth, sun});
+            ///way too expensive to solve directly
+            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 40, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
 
             printf("min_dist %f\n", min_dist / 1000 / 1000 / 1000);
+
+            printf("Time %f\n", clk.getElapsedTime().asMilliseconds() / 1000.f);
+
+            printf("time course takes %f years\n", info.mtick * timestep / 60 / 60 / 24 / 365);
+
+            system("pause");
 
 
             ///tomorrow's homework
@@ -724,17 +659,48 @@ int main()
             {
                 orbital_manager.plot_all(info.ret, i, win, {{0, 1, 0}, {1, 0, 0}, earth->col, sun->col});
 
-
                 if(info.mtick == i)
                     system("pause");
 
-                int every = 2;
+                int every = 1;
 
                 if(i % every == 0)
                 {
+                    //win.display();
+                    //win.display();
                     win.display();
+                    /*win.display();
+                    win.display();
+                    win.display();
+                    win.display();
+                    win.display();
+                    win.display();*/
                     win.clear();
                 }
+
+                float dmouse = 0;
+
+                while(win.pollEvent(event))
+                {
+                    if(event.type == sf::Event::Closed)
+                        win.close();
+
+                    if(event.type == sf::Event::MouseWheelScrolled)
+                    {
+                        dmouse += event.mouseWheelScroll.delta;
+                    }
+                }
+
+                if(key.isKeyPressed(sf::Keyboard::LShift))
+                {
+                    dmouse *= 5.f;
+                }
+
+                manager::scale -= dmouse;
+
+                if(manager::scale < 1)
+                    manager::scale = 1;
+
             }
 
 
@@ -773,7 +739,7 @@ int main()
 
         ///its all drawing time
         if(tick < predefined_max_tick)
-            orbital_manager.tick();
+            orbital_manager.tick(dt_s, dt_s);
         else
         {
             orbital_manager.display(win);
@@ -783,6 +749,14 @@ int main()
             win.display();
             win.clear(sf::Color(0,0,0));
         }
+
+        /*if(true)
+        {
+            orbital_manager.display(win);
+
+            win.display();
+            win.clear(sf::Color(0,0,0));
+        }*/
 
         tick++;
 
