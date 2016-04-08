@@ -49,22 +49,20 @@ void manager::tick(float dt_cur, float dt_old)
             if(r12l < 69911 * pow(10, 3))
                 r12l = 69911 * pow(10, 3);
 
+            vec2d r12N = r12.norm();
 
-            vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * (r12.norm() * G);
+            //vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * G * r12.norm();
 
-            //vec2f df12 = conv<double, float, 2>(F12);
+            double NFac = G / (r12l * r12l);
 
-            vec2d df12 = F12;
+            //vec2d df12 = F12;
 
             ///so its own mass cancels out in the change in velocity calvulations
-            vec2d aF12 = -df12 / o1->mass;
-            vec2d bF12 =  df12 / o2->mass;
+            //vec2d aF12 = -df12 / o1->mass;
+            //vec2d bF12 =  df12 / o2->mass;
 
-            //aF12 = aF12;
-            //bF12 = bF12;
-
-            //aF12 = aF12 * dt_cur * dt_cur;
-            //bF12 = bF12 * dt_cur * dt_cur;
+            vec2d aF12 =  o2->mass * r12N * NFac;
+            vec2d bF12 = -o1->mass * r12N * NFac;
 
             o1->acc += (aF12);
             o2->acc += (bF12);
@@ -366,6 +364,7 @@ double get_min_dist(std::vector<orbital*>& orbs, orbital* test_orbital)
     return min_dist;
 }
 
+///gunna have to progressively refine over several frames
 vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital)
 {
     double earth_sun_distance = 149.6 * pow(10, 9);
@@ -384,10 +383,7 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
 
     for(int i=0; i<ticks; i++)
     {
-        if(i == 0)
-            tick(dt_current, dt_last);
-        else
-            tick(dt_current, dt_last);
+        tick(dt_current, dt_last);
 
         test_ret.push_back(test_orbital->pos);
 
@@ -399,11 +395,17 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
 
         double frac = cmin / (earth_sun_distance / 2);
 
-        frac = max(frac, 0.05);
+        frac = max(frac, 0.2);
 
-        frac *= 10.f;
+        frac *= 5.f;
+
+        if(frac > 1)
+            frac *= frac;
 
         double next_dt = frac * dt_min;
+
+        if(next_dt > dt_max)
+            next_dt = dt_max;
 
         dt_current = next_dt;
     }
@@ -424,7 +426,7 @@ void manager::plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex)
 
     //printf("ns %i %i\n", test_res.size(), test_res.front().size());
 
-    vector<vec2d> test_res = test_with_adaptive_tick(ticks, dt_s*10, dt_s, dt_s, o);
+    vector<vec2d> test_res = test_with_adaptive_tick(ticks, dt_s*100, dt_s, dt_s, o);
 
     vec2d last_pos = {-10, -10};
 

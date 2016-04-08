@@ -354,7 +354,7 @@ int main()
             orbital_manager.display(win);
 
             if(key.isKeyPressed(sf::Keyboard::F))
-                orbital_manager.plot_orbit(voyager_base, 1000, win);
+                orbital_manager.plot_orbit(voyager_base, 100, win);
 
 
             win.display();
