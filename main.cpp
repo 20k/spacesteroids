@@ -102,6 +102,15 @@ int main()
     ///nope, make it aphelion, otherwise its inside neptune
     orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
 
+    orbital* voyager_base = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 2));
+
+    voyager_base->mass = 721.9;
+    voyager_base->col = {1, 0, 0};
+
+    //orbital voyager_probe = *earth;
+    //voyager_probe.mass = 721.9;
+    //voyager_probe.col = {1, 0, 0};
+
     /*sf::RenderTexture orbits;
     orbits.create(win.getSize().x, win.getSize().y);
 
@@ -138,7 +147,7 @@ int main()
 
             if(event.type == sf::Event::MouseWheelScrolled)
             {
-                dmouse += event.mouseWheelScroll.delta;
+                dmouse = event.mouseWheelScroll.delta;
             }
         }
 
@@ -322,9 +331,31 @@ int main()
             orbital_manager.tick(dt_s, dt_s);
         else
         {
+            float mod = 0.001f;
+
+            if(key.isKeyPressed(sf::Keyboard::Up))
+                voyager_base->acc.v[1] = -1 * mod;
+
+            if(key.isKeyPressed(sf::Keyboard::Down))
+                voyager_base->acc.v[1] = 1 * mod;
+
+            if(key.isKeyPressed(sf::Keyboard::Left))
+                voyager_base->acc.v[0] = -1 * mod;
+
+            if(key.isKeyPressed(sf::Keyboard::Right))
+                voyager_base->acc.v[0] = 1 * mod;
+
+
+            if(key.isKeyPressed(sf::Keyboard::F))
+            {
+                orbital_manager.tick(dt_s, dt_s);
+            }
+
             orbital_manager.display(win);
 
-            //win.draw(spr);
+            if(key.isKeyPressed(sf::Keyboard::F))
+                orbital_manager.plot_orbit(voyager_base, 1000, win);
+
 
             win.display();
             win.clear(sf::Color(0,0,0));

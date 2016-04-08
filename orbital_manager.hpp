@@ -64,6 +64,9 @@ struct manager
 
     vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
 
+    ///here the test orbital is a member of the manager
+    vector<vec2d> test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital);
+
     int get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos);
 
     ret_info bisect(int ticks, float dt_cur, float dt_old, float base_speed, float minimum, float maximum, int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
@@ -71,6 +74,8 @@ struct manager
     void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1});
 
     void plot_all(const vector<vector<vec2d>>& elements, int which_tick, sf::RenderWindow& win, vector<vec3f> cols = vector<vec3f>());
+
+    void plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex);
 };
 
 

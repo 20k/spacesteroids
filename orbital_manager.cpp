@@ -60,8 +60,11 @@ void manager::tick(float dt_cur, float dt_old)
             vec2d aF12 = -df12 / o1->mass;
             vec2d bF12 =  df12 / o2->mass;
 
-            aF12 = aF12 * dt_cur * dt_cur;
-            bF12 = bF12 * dt_cur * dt_cur;
+            //aF12 = aF12;
+            //bF12 = bF12;
+
+            //aF12 = aF12 * dt_cur * dt_cur;
+            //bF12 = bF12 * dt_cur * dt_cur;
 
             o1->acc += (aF12);
             o2->acc += (bF12);
@@ -72,7 +75,7 @@ void manager::tick(float dt_cur, float dt_old)
     {
         vec2d o_pos = i->pos;
 
-        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc;
+        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur;
 
         i->old_pos = o_pos;
 
@@ -209,6 +212,11 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
         destroy(my_test);
     }
 
+    if(!test_orbital)
+    {
+        test_ret.erase(test_ret.begin());
+    }
+
     for(int i=0; i<olist.size(); i++)
     {
         *olist[i] = old[i];
@@ -216,7 +224,6 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 
     return test_ret;
 }
-
 
 int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos)
 {
@@ -338,5 +345,96 @@ void manager::plot_all(const vector<vector<vec2d>>& elements, int which_tick, sf
             col = cols[i];
 
         plot(elements, i, which_tick, win, col);
+    }
+}
+
+double get_min_dist(std::vector<orbital*>& orbs, orbital* test_orbital)
+{
+    double min_dist = DBL_MAX;
+
+    for(auto& i : orbs)
+    {
+        if(i == test_orbital)
+            continue;
+
+        double len = (i->pos - test_orbital->pos).length();
+
+        if(len < min_dist)
+            min_dist = len;
+    }
+
+    return min_dist;
+}
+
+vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital)
+{
+    double earth_sun_distance = 149.6 * pow(10, 9);
+
+    std::vector<orbital> old;
+
+    for(auto& i : olist)
+    {
+        old.push_back(*i);
+    }
+
+    std::vector<vec2d> test_ret;
+
+    float dt_current = dt_min;
+    float dt_last = dt_old;
+
+    for(int i=0; i<ticks; i++)
+    {
+        if(i == 0)
+            tick(dt_current, dt_last);
+        else
+            tick(dt_current, dt_last);
+
+        test_ret.push_back(test_orbital->pos);
+
+        dt_last = dt_current;
+
+        double cmin = get_min_dist(olist, test_orbital);
+
+        ///need to refine on velocity too
+
+        double frac = cmin / (earth_sun_distance / 2);
+
+        frac = max(frac, 0.05);
+
+        frac *= 10.f;
+
+        double next_dt = frac * dt_min;
+
+        dt_current = next_dt;
+    }
+
+    for(int i=0; i<olist.size(); i++)
+    {
+        *olist[i] = old[i];
+    }
+
+    return test_ret;
+}
+
+
+///so, we definitely need to use an adaptive timestep when testing
+void manager::plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex)
+{
+    //vector<vector<vec2d>> test_res = test(ticks, dt_s * 2, dt_s, nullptr, false, nullptr, {o});
+
+    //printf("ns %i %i\n", test_res.size(), test_res.front().size());
+
+    vector<vec2d> test_res = test_with_adaptive_tick(ticks, dt_s*10, dt_s, dt_s, o);
+
+    vec2d last_pos = {-10, -10};
+
+    for(auto& i : test_res)
+    {
+        if((i - last_pos).length() >= 1)
+        {
+            draw(i, o->col, tex, 1);
+
+            last_pos = i;
+        }
     }
 }
