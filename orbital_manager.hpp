@@ -57,7 +57,9 @@ struct manager
 
     void draw(vec2d _pos, vec3f _col, sf::RenderTarget& win, float r = 4);
 
-    void display(sf::RenderTarget& win, float r = 4);
+    void draw(orbital& o, sf::RenderTarget& win, float r = 2);
+
+    void display(sf::RenderTarget& win, float r = 2);
 
 
     vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());

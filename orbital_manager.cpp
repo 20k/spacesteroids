@@ -102,12 +102,46 @@ void manager::draw(vec2d _pos, vec3f _col, sf::RenderTarget& win, float r)
     win.draw(shape);
 }
 
+void manager::draw(orbital& o, sf::RenderTarget& win, float r)
+{
+    vec2d rad_pos = o.pos + (vec2d){o.radius, 0.f};
+
+    vec2d s_rad_pos = pos2screen(rad_pos);
+
+    sf::CircleShape shape;
+    //shape.setSize({r, r});
+    shape.setRadius(r);
+
+    vec2d pos = pos2screen(o.pos); ///- projection
+
+    vec2f epos = {(float)pos.v[0] + win.getSize().x/2, (float)pos.v[1] + win.getSize().y/2};
+
+    if(epos.v[0] < 0 || epos.v[0] >= win.getSize().x || epos.v[1] < 0 || epos.v[1] >= win.getSize().y)
+        return;
+
+    float real_rad = fabs(s_rad_pos.v[0] - pos.v[0]);
+
+    if(real_rad > r)
+        shape.setRadius(real_rad);
+
+    shape.setOrigin({shape.getRadius(), shape.getRadius()});
+
+    shape.setPosition({epos.v[0], epos.v[1]});
+
+    vec3f col = o.col * 255.f;
+
+    shape.setFillColor({col.v[0], col.v[1], col.v[2]});
+
+    win.draw(shape);
+}
+
 void manager::display(sf::RenderTarget& win, float r)
 {
     ///just assume
     for(auto& i : olist)
     {
-        draw(i->pos, i->col, win, r);
+        //draw(i->pos, i->col, win, r);
+        draw(*i, win, r);
     }
 }
 

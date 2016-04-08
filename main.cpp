@@ -56,8 +56,11 @@ bool once()
 
 int main()
 {
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 4;
+
     sf::RenderWindow win;
-    win.create(sf::VideoMode(1200, 800), "hi");
+    win.create(sf::VideoMode(1200, 800), "hi", sf::Style::Default, settings);
     //win.setVerticalSyncEnabled(true);
 
     manager orbital_manager;
@@ -68,6 +71,8 @@ int main()
 
     sun->col = {1.f, 0.8, 0.4};
 
+    sun->radius = 696342.f * pow(10, 3);
+
 
     orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 6371 * pow(10, 3)));
 
@@ -75,9 +80,9 @@ int main()
 
     std::cout << "pos " << earth->pos <<  " opos " << earth->old_pos << std::endl;
 
-    orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3)));
+    orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3), 2440 * pow(10, 3)));
 
-    orbital* venus = orbital_manager.make_new(orbital(4.87 * pow(10, 24), 108.2 * pow(10, 9), 35.02 * pow(10, 3)));
+    orbital* venus = orbital_manager.make_new(orbital(4.87 * pow(10, 24), 108.2 * pow(10, 9), 35.02 * pow(10, 3), 6052 * pow(10, 3)));
 
     orbital* mars = orbital_manager.make_new(orbital(6.42 * pow(10, 23), 227.9 * pow(10, 9), 24.077 * pow(10, 3), 3390 * pow(10, 3)));
 
@@ -142,10 +147,21 @@ int main()
             dmouse *= 5.f;
         }
 
+        if(key.isKeyPressed(sf::Keyboard::LControl))
+            dmouse *= 0.1f;
+
+        if(dmouse < 0)
+            dmouse *= manager::scale;
+        else
+            dmouse *= manager::scale/2;
+
+        if(key.isKeyPressed(sf::Keyboard::Space))
+            printf("%f %f\n", dmouse, manager::scale);
+
         manager::scale -= dmouse;
 
-        if(manager::scale < 1)
-            manager::scale = 1;
+        if(manager::scale < 0.001)
+            manager::scale = 0.001;
 
         float mscale = 0.1f;
 
