@@ -399,8 +399,8 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
 
         frac *= 5.f;
 
-        if(frac > 1)
-            frac *= frac;
+        //if(frac > 1)
+        //    frac *= frac;
 
         double next_dt = frac * dt_min;
 
@@ -408,6 +408,9 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
             next_dt = dt_max;
 
         dt_current = next_dt;
+
+        ///this is the skip for above
+        dt_current = dt_min;
     }
 
     for(int i=0; i<olist.size(); i++)

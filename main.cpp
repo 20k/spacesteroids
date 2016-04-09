@@ -6,6 +6,7 @@ using namespace std;
 
 #include "orbital.hpp"
 #include "orbital_manager.hpp"
+#include "spaceship.hpp"
 
 
 ///has the button been pressed once, and only once
@@ -106,6 +107,39 @@ int main()
 
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
+
+
+    ship ss1;
+
+    ///this is just the first stage!
+    component launcher;
+
+    //launcher.fuel_mass_burn_ps = (2290000 - 130000) / 165.f;
+    launcher.fuel_mass_kg = (2290000 - 130000);
+
+    //launcher.f_type.density = 900;
+    launcher.f_type.mass_isp = 263 * 9.81;//294;
+
+    launcher.non_fuel_mass_kg = 130000;
+
+    ss1.stage_list.push_back(launcher);
+
+    component s2;
+    s2.fuel_mass_kg = (496200 - 40100);
+    s2.f_type.mass_isp = 421 * 9.81;
+    s2.non_fuel_mass_kg = 40100;
+
+    ss1.stage_list.push_back(s2);
+
+    component s3;
+
+    s3.fuel_mass_kg = (123000 - 13500);
+    s3.f_type.mass_isp = 421 * 9.81;
+    s3.non_fuel_mass_kg = 13500;
+
+    ss1.stage_list.push_back(s3);
+
+    printf("DV %f\n", ss1.get_dv());
 
     //orbital voyager_probe = *earth;
     //voyager_probe.mass = 721.9;
@@ -292,8 +326,6 @@ int main()
 
             }
 
-
-
             /*
             ///voyager, mars
             int min_tick = orbital_manager.get_minimum_distance(0, 2, last_experiment);
@@ -354,7 +386,7 @@ int main()
             orbital_manager.display(win);
 
             if(key.isKeyPressed(sf::Keyboard::F))
-                orbital_manager.plot_orbit(voyager_base, 100, win);
+                orbital_manager.plot_orbit(voyager_base, 1000, win);
 
 
             win.display();
