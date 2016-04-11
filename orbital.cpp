@@ -15,7 +15,10 @@ void orbital::accelerate_relative_to_velocity(double amount, double angle_offset
     vec2d vel_dir = (pos - old_pos).norm();
 
     ///the directional part of this is wrong
-    acc = acc + vel_dir.rot(angle_offset) * amount * time_s * time_s;
+    //acc = acc + vel_dir.rot(angle_offset) * amount;// * time_s * time_s;
+
+
+    unconditional_acc = unconditional_acc + vel_dir.rot(angle_offset) * amount * time_s * time_s;
 }
 
 orbital::orbital(double _mass, double _distance, double _speed, double rad)

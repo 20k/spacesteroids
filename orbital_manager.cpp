@@ -76,11 +76,13 @@ void manager::tick(float dt_cur, float dt_old)
     {
         vec2d o_pos = i->pos;
 
-        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur;
+        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur + i->unconditional_acc;
 
         i->old_pos = o_pos;
 
         i->acc = {0,0};
+
+        i->unconditional_acc = {0,0};
     }
 }
 
@@ -194,6 +196,8 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
         if(test_orbital)
         {
             test_ret[0].push_back(my_test->pos);
+
+            //printf("%f %f\n", my_test->pos.v[0], my_test->pos.v[1]);
         }
 
         for(auto& j : olist)

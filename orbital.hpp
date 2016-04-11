@@ -23,6 +23,7 @@ struct orbital
     //vec2d next_pos = {0,0};
 
     vec2d acc = {0,0};
+    vec2d unconditional_acc = {0,0};
 
     double radius;
 
