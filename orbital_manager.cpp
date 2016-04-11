@@ -44,12 +44,15 @@ void manager::tick(float dt_cur, float dt_old)
 
             double r12l = r12.length_d();
 
+            vec2d r12N = r12 / max(r12l, 1.);
+
             ///???
             ///radius of jupiter
             if(r12l < 69911 * pow(10, 3))
                 r12l = 69911 * pow(10, 3);
 
-            vec2d r12N = r12.norm();
+
+            //vec2d r12N = r12 / r12l;
 
             //vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * G * r12.norm();
 
@@ -288,7 +291,6 @@ ret_info manager::bisect(int ticks, float dt_cur, float dt_old, float base_speed
 
 
         probe.accelerate_relative_to_velocity(speed, 0, 1200);
-
 
         auto last_experiment = this->test(ticks, dt_cur, dt_old, nullptr, false, &probe, info_to_retrieve);
 

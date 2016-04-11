@@ -54,6 +54,22 @@ bool once()
     return false;
 }
 
+///game design
+///harvest asteroids for fuel + materials
+///initial stages have to return physically to earth the resources
+///later stages can fling resources to earth
+///earth also produces materials at slow rate
+///have to defend system from incoming threats
+///network communication system, have to station relay satellites
+///several ways to take down incoming threats
+///satellite grapple and self destruct
+///satellite grapple and redirect into a gas giant
+///satellite grapple and redirect on an escape directory
+///land base throws explosives, as well as generating new resources
+///planet depletion?
+
+///satellite based missiles?
+///reposition planets
 
 int main()
 {
@@ -109,6 +125,8 @@ int main()
     voyager_base->col = {1, 0, 0};
 
 
+    ///lets keep this purely for fluff reasons. The materials we use will rock
+    #ifdef VERIFICATION_SATURN_V
     ship ss1;
 
     ///this is just the first stage!
@@ -140,6 +158,7 @@ int main()
     ss1.stage_list.push_back(s3);
 
     printf("DV %f\n", ss1.get_dv());
+    #endif
 
     //orbital voyager_probe = *earth;
     //voyager_probe.mass = 721.9;
@@ -263,7 +282,8 @@ int main()
             float timestep = dt_s * 3;
 
             ///way too expensive to solve directly
-            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 40, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
+            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
+            //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
 
@@ -378,6 +398,7 @@ int main()
                 voyager_base->acc.v[0] = 1 * mod;
 
 
+            ///why the christ isn't orbital manager keeping track of its own last_tick dt?
             if(key.isKeyPressed(sf::Keyboard::F))
             {
                 orbital_manager.tick(dt_s, dt_s);
