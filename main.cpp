@@ -279,10 +279,10 @@ int main()
             ///include a time to fire variable, wait that long then fire
             ///need a variable timestep before that is viable
 
-            float timestep = dt_s * 3;
+            float timestep = dt_s * 1;
 
             ///way too expensive to solve directly
-            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
+            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 100, 0.1, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
