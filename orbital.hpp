@@ -18,6 +18,7 @@ struct orbital
     vec2d old_pos = {0,0};
 
     vec3f col = {1, 1, 1};
+    vec3f transitory_draw_col = {1, 1, 1};
 
     ///so that we update atomically
     //vec2d next_pos = {0,0};

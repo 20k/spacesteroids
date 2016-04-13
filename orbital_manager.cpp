@@ -134,11 +134,13 @@ void manager::draw(orbital& o, sf::RenderTarget& win, float r)
 
     shape.setPosition({epos.v[0], epos.v[1]});
 
-    vec3f col = o.col * 255.f;
+    vec3f col = o.transitory_draw_col * 255.f;
 
     shape.setFillColor({col.v[0], col.v[1], col.v[2]});
 
     win.draw(shape);
+
+    o.transitory_draw_col = o.col;
 }
 
 void manager::display(sf::RenderTarget& win, float r)
@@ -448,4 +450,25 @@ void manager::plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex)
             last_pos = i;
         }
     }
+}
+
+orbital* manager::get_nearest(vec2d mouse_screen_pos, vec2d screen_dim)
+{
+    vec2d world_pos = screen2pos(mouse_screen_pos, screen_dim/2.);
+
+    double min_dist = DBL_MAX;
+    orbital* ret = nullptr;
+
+    for(auto& i : olist)
+    {
+        double ndist = (i->pos - world_pos).length();
+
+        if(ndist < min_dist)
+        {
+            min_dist = ndist;
+            ret = i;
+        }
+    }
+
+    return ret;
 }

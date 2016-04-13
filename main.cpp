@@ -262,7 +262,8 @@ int main()
         ///although then again, do I?
         if(once<sf::Mouse::Right>())
         {
-            orbital voyager_probe = *earth;
+            //orbital voyager_probe = *earth;
+            orbital voyager_probe = *voyager_base;
             voyager_probe.mass = 721.9;
             voyager_probe.col = {1, 0, 0};
 
@@ -271,7 +272,7 @@ int main()
 
             sf::Clock clk;
 
-            int tnum = 100000;
+            int tnum = 10000;
 
             ///keep this one simply because its awesome
             //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
@@ -282,7 +283,7 @@ int main()
             float timestep = dt_s * 1;
 
             ///way too expensive to solve directly
-            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 100, 0.1, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
+            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 0.5, 0.1, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
@@ -383,6 +384,8 @@ int main()
             orbital_manager.tick(dt_s, dt_s);
         else
         {
+            orbital_manager.get_nearest(m, wh * 2.)->transitory_draw_col = {1, 0, 0};
+
             float mod = 0.001f;
 
             if(key.isKeyPressed(sf::Keyboard::Up))

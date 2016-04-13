@@ -76,6 +76,8 @@ struct manager
     void plot_all(const vector<vector<vec2d>>& elements, int which_tick, sf::RenderWindow& win, vector<vec3f> cols = vector<vec3f>());
 
     void plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex);
+
+    orbital* get_nearest(vec2d mouse_screen_pos, vec2d screen_dim);
 };
 
 

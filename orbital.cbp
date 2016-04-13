@@ -52,6 +52,11 @@
 			<Add option="-lsfml-system" />
 		</Linker>
 		<Unit filename="main.cpp" />
+		<Unit filename="orbital.cpp" />
+		<Unit filename="orbital_manager.cpp" />
+		<Unit filename="orbital_manager.hpp" />
+		<Unit filename="spaceship.cpp" />
+		<Unit filename="spaceship.hpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
