@@ -272,7 +272,7 @@ int main()
 
             sf::Clock clk;
 
-            int tnum = 10000;
+            int tnum = 50000;
 
             ///keep this one simply because its awesome
             //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
@@ -280,10 +280,30 @@ int main()
             ///include a time to fire variable, wait that long then fire
             ///need a variable timestep before that is viable
 
+            orbital* target = saturn;
+
+            #define MOUSE_TARGETTING
+            #ifdef MOUSE_TARGETTING
+            target = orbital_manager.get_nearest(m, wh * 2.);
+            #endif // MOUSE_TARGETTING
+
+            ///relative to velocity
+            const float angle_offset = 0.f;
+            const float front_half_angle_cone = M_PI/2.f;
+            const float angle_subdivisions = 4;
+
+            const int num_vel_subdivisions = 20;
+            const int num_recursions = 5;
+
+
             float timestep = dt_s * 1;
 
             ///way too expensive to solve directly
-            auto info = orbital_manager.bisect(tnum, timestep, dt_s, 0.5, 0.1, 10.0, 30, 4, &voyager_probe, saturn, {earth, sun, jupiter});
+            ///we need to be bisecting with angle as well
+            auto info = orbital_manager.bisect(tnum, timestep, dt_s,
+                                               0.1, 0.1, 2000.0,
+                                               angle_offset, front_half_angle_cone, angle_subdivisions,
+                                               num_vel_subdivisions, num_recursions, &voyager_probe, target, {earth, sun, jupiter});
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();

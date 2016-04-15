@@ -28,11 +28,13 @@ void manager::destroy(orbital* o)
 
 void manager::tick(float dt_cur, float dt_old)
 {
-    for(int i=0; i<(int)olist.size(); i++)
+    int osize = olist.size();
+
+    for(int i=0; i<osize; i++)
     {
         orbital* o1 = olist[i];
 
-        for(int j=i+1; j<(int)olist.size(); j++)
+        for(int j=i+1; j<osize; j++)
         {
             orbital* o2 = olist[j];
 
@@ -51,21 +53,12 @@ void manager::tick(float dt_cur, float dt_old)
             if(r12l < 69911 * pow(10, 3))
                 r12l = 69911 * pow(10, 3);
 
-
-            //vec2d r12N = r12 / r12l;
-
-            //vec2d F12 = - (o1->mass / r12l) * (o2->mass / r12l) * G * r12.norm();
-
             double NFac = G / (r12l * r12l);
 
-            //vec2d df12 = F12;
-
             ///so its own mass cancels out in the change in velocity calvulations
-            //vec2d aF12 = -df12 / o1->mass;
-            //vec2d bF12 =  df12 / o2->mass;
 
             vec2d aF12 =  o2->mass * r12N * NFac;
-            vec2d bF12 = -o1->mass * r12N * NFac;
+            vec2d bF12 = (-o1->mass) * r12N * NFac;
 
             o1->acc += (aF12);
             o2->acc += (bF12);
@@ -256,7 +249,10 @@ int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& p
 }
 
 
-ret_info manager::bisect(int ticks, float dt_cur, float dt_old, float base_speed, float minimum, float maximum, int num_per_step, int depth, orbital* test_orbital, orbital* target_orbital, std::vector<orbital*> info_to_retrieve, int c)
+ret_info manager::bisect(int ticks, float dt_cur, float dt_old,
+                         float base_speed, float minimum, float maximum,
+                         float angle_offset, float half_angle_cone, float angle_subdivisions,
+                         int num_per_step, int depth, orbital* test_orbital, orbital* target_orbital, std::vector<orbital*> info_to_retrieve, int c)
 {
     int which_id = -1;
 
@@ -276,6 +272,11 @@ ret_info manager::bisect(int ticks, float dt_cur, float dt_old, float base_speed
         which_id = 1;
     }
 
+
+    float next_angle_offset = angle_offset;
+    float next_half_angle = half_angle_cone;
+    const float next_angle_subdivisions = angle_subdivisions;
+
     double step = (maximum - minimum) / num_per_step;
 
     double min_min = DBL_MAX;
@@ -285,49 +286,75 @@ ret_info manager::bisect(int ticks, float dt_cur, float dt_old, float base_speed
 
     vector<vector<vec2d>> backup;
 
-    for(int i=0; i<num_per_step; i++)
+    for(int j=0; j<(int)angle_subdivisions; j++)
     {
-        orbital probe = *test_orbital;
+        float frac = (float)j/angle_subdivisions;
 
-        float ifrac = (float)i / num_per_step;
+        frac -= 0.5f;
 
-        double cur = (maximum - minimum) * ifrac + minimum;
+        frac *= 2.f;
 
-        double speed = base_speed / cur;
+        float angle_offset_offset = half_angle_cone * frac;
 
+        float real_offset = angle_offset_offset + angle_offset;
 
-        probe.accelerate_relative_to_velocity(speed, 0, 1200);
-
-        auto last_experiment = this->test(ticks, dt_cur, dt_old, nullptr, false, &probe, info_to_retrieve);
-
-        int mtick = this->get_minimum_distance(0, which_id, last_experiment);
-
-
-        vec2d min_voyager = last_experiment[0][mtick];
-        vec2d min_mars = last_experiment[which_id][mtick];
-
-        if((min_mars - min_voyager).length() < target_orbital->radius)
+        for(int i=0; i<num_per_step; i++)
         {
-            printf("HIT\n");
-        }
+            orbital probe = *test_orbital;
+            probe.unconditional_acc = {0,0};
 
-        if((min_mars - min_voyager).length() < min_min)
-        {
-            min_min = (min_mars - min_voyager).length();
-            //f_acc = cur;
-            backup = last_experiment;
-            saved_mtick = mtick;
-            found_speed = speed;
-            found_mod = cur;
+            float ifrac = (float)i / num_per_step;
+
+            double cur = (maximum - minimum) * ifrac + minimum;
+
+            //double speed = base_speed / cur;
+
+            double speed = base_speed * cur;
+
+            //if(fabs(cur) < 0.000001)
+            //    speed = 0;
+
+
+            probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
+
+            auto last_experiment = this->test(ticks, dt_cur, dt_old, nullptr, false, &probe, info_to_retrieve);
+
+            int mtick = this->get_minimum_distance(0, which_id, last_experiment);
+
+
+            vec2d min_voyager = last_experiment[0][mtick];
+            vec2d min_mars = last_experiment[which_id][mtick];
+
+            if((min_mars - min_voyager).length() < target_orbital->radius)
+            {
+                printf("HIT\n");
+            }
+
+            if((min_mars - min_voyager).length() < min_min)
+            {
+                min_min = (min_mars - min_voyager).length();
+                //f_acc = cur;
+                backup = last_experiment;
+                saved_mtick = mtick;
+                found_speed = speed;
+                found_mod = cur;
+                next_angle_offset = real_offset;
+            }
         }
     }
 
+    next_half_angle = next_half_angle / angle_subdivisions;
+
+    ///wtf, found mod is a dividor, not a multiplier
+    ///higher mod = slower speed
+    ///?????
     printf("found_acc %f\n", found_mod);
     printf("found mindist %f\n", min_min / 1000 / 1000 / 1000);
+    printf("found angle %f\n", next_angle_offset);
 
     if(c+1 < depth)
     {
-        return bisect(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
+        return bisect(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
     }
 
     return {backup, saved_mtick};

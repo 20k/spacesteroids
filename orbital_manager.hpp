@@ -69,7 +69,10 @@ struct manager
 
     int get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos);
 
-    ret_info bisect(int ticks, float dt_cur, float dt_old, float base_speed, float minimum, float maximum, int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
+    ret_info bisect(int ticks, float dt_cur, float dt_old,
+                    float base_speed, float minimum, float maximum,
+                    float angle_offset, float half_angle_cone, float angle_subdivisions,
+                    int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
 
     void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1});
 
