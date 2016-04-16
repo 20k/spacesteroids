@@ -25,7 +25,6 @@ void manager::destroy(orbital* o)
     }
 }
 
-
 void manager::tick(float dt_cur, float dt_old)
 {
     int osize = olist.size();
@@ -66,6 +65,59 @@ void manager::tick(float dt_cur, float dt_old)
     }
 
     for(auto& i : olist)
+    {
+        vec2d o_pos = i->pos;
+
+        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur + i->unconditional_acc;
+
+        i->old_pos = o_pos;
+
+        i->acc = {0,0};
+
+        i->unconditional_acc = {0,0};
+    }
+}
+
+void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes)
+{
+    int osize = olist.size();
+
+    for(int i=0; i<osize; i++)
+    {
+        orbital* o1 = olist[i];
+
+        int psize = probes.size();
+
+        for(int j=0; j<psize; j++)
+        {
+            orbital* o2 = probes[j];
+
+            double G = 0.0000000000674;
+
+            vec2d r12 = (o2->pos - o1->pos);
+
+            double r12l = r12.length_d();
+
+            vec2d r12N = r12 / max(r12l, 1.);
+
+            ///???
+            ///radius of jupiter
+            if(r12l < 69911 * pow(10, 3))
+                r12l = 69911 * pow(10, 3);
+
+            double NFac = G / (r12l * r12l);
+
+            ///so its own mass cancels out in the change in velocity calvulations
+
+            vec2d bF12 = (-o1->mass) * r12N * NFac;
+
+            o2->acc += (bF12);
+
+            //printf("%f %f\n", EXPAND_2(o2->acc));
+        }
+    }
+
+    for(auto& i : probes)
     {
         vec2d o_pos = i->pos;
 
@@ -225,6 +277,71 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
     return test_ret;
 }
 
+vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
+{
+    std::vector<orbital> old;
+
+    for(auto& i : olist)
+    {
+        old.push_back(*i);
+    }
+
+    //orbital* my_test;
+
+    //my_test = make_new(*test_orbital);
+
+    vector<vector<vec2d>> test_ret;
+
+    test_ret.resize(info_to_retrieve.size() + 1);
+
+    for(auto& i : test_ret)
+    {
+        i.reserve(ticks);
+    }
+
+    for(int i=0; i<ticks-1; i++)
+    {
+        if(i == 0)
+            tick_only_probes(dt_cur, dt_old, {test_orbital});
+        else
+            tick_only_probes(dt_cur, dt_cur, {test_orbital});
+
+        test_ret[0].push_back(test_orbital->pos);
+
+        for(auto& j : olist)
+        {
+            for(int k=0; k<info_to_retrieve.size(); k++)
+            {
+                if(j == info_to_retrieve[k])
+                {
+                    test_ret[k + 1].push_back(j->pos);
+                }
+            }
+        }
+
+        for(int j=0; j<olist.size(); j++)
+        {
+            orbital* o1 = olist[j];
+
+            int next = i + 1;
+
+            o1->pos = cache[next][j];
+            o1->old_pos = cache[i][j];
+
+            //o1->manual_update(cache[i][j]);
+        }
+    }
+
+    //destroy(my_test);
+
+    for(int i=0; i<olist.size(); i++)
+    {
+        *olist[i] = old[i];
+    }
+
+    return test_ret;
+}
+
 int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos)
 {
     int min_tick = -1;
@@ -355,6 +472,162 @@ ret_info manager::bisect(int ticks, float dt_cur, float dt_old,
     if(c+1 < depth)
     {
         return bisect(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
+    }
+
+    return {backup, saved_mtick};
+}
+
+///we need a -> clone
+std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int tick_num, float dt_cur, float dt_old)
+{
+    std::vector<orbital> old_orbitals;
+
+    for(auto& i : orbital_manager.olist)
+    {
+        old_orbitals.push_back(*i);
+    }
+
+    std::vector<std::vector<vec2d>> object_cache;
+
+    object_cache.resize(tick_num);
+
+    for(auto& i : object_cache)
+    {
+        i.reserve(orbital_manager.olist.size());
+    }
+
+    for(int i=0; i<tick_num; i++)
+    {
+        std::vector<vec2d>& this_tick_cache = object_cache[i];
+
+        const std::vector<orbital*>& cur_orbitals = orbital_manager.olist;
+
+        for(auto& j : cur_orbitals)
+        {
+            this_tick_cache.push_back(j->pos);
+        }
+
+        if(i == 0)
+            orbital_manager.tick(dt_cur, dt_old);
+        else
+            orbital_manager.tick(dt_cur, dt_cur);
+    }
+
+    for(int i=0; i<old_orbitals.size(); i++)
+    {
+        *(orbital_manager.olist[i]) = old_orbitals[i];
+    }
+
+    return object_cache;
+}
+
+ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
+                         float base_speed, float minimum, float maximum,
+                         float angle_offset, float half_angle_cone, float angle_subdivisions,
+                         int num_per_step, int depth, orbital* test_orbital, orbital* target_orbital,
+                         std::vector<orbital*> info_to_retrieve, int c,
+                         const std::vector<std::vector<vec2d>>& passed_cache)
+{
+    int which_id = -1;
+
+    for(int i=0; i<info_to_retrieve.size(); i++)
+    {
+        if(info_to_retrieve[i] == target_orbital)
+        {
+            which_id = i + 1;
+        }
+    }
+
+    ///add target orbital if its not found
+    if(which_id == -1)
+    {
+        info_to_retrieve.insert(info_to_retrieve.begin(), target_orbital);
+
+        which_id = 1;
+    }
+
+    std::vector<std::vector<vec2d>> cache = passed_cache;
+
+    if(c == 0)
+        cache = get_object_cache(*this, ticks, dt_cur, dt_old);
+
+
+    float next_angle_offset = angle_offset;
+    float next_half_angle = half_angle_cone;
+    const float next_angle_subdivisions = angle_subdivisions;
+
+    double step = (maximum - minimum) / num_per_step;
+
+    double min_min = DBL_MAX;
+    int saved_mtick = -1;
+    double found_speed = 1;
+    double found_mod = minimum;
+
+    vector<vector<vec2d>> backup;
+
+    for(int j=0; j<(int)angle_subdivisions; j++)
+    {
+        float frac = (float)j/angle_subdivisions;
+
+        frac -= 0.5f;
+
+        frac *= 2.f;
+
+        float angle_offset_offset = half_angle_cone * frac;
+
+        float real_offset = angle_offset_offset + angle_offset;
+
+        for(int i=0; i<num_per_step; i++)
+        {
+            orbital probe = *test_orbital;
+            probe.unconditional_acc = {0,0};
+
+            float ifrac = (float)i / num_per_step;
+
+            double cur = (maximum - minimum) * ifrac + minimum;
+
+            double speed = base_speed * cur;
+
+            probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
+
+            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, cache, info_to_retrieve);
+
+            int mtick = this->get_minimum_distance(0, which_id, last_experiment);
+
+
+            vec2d min_voyager = last_experiment[0][mtick];
+            vec2d min_mars = last_experiment[which_id][mtick];
+
+            if((min_mars - min_voyager).length() < target_orbital->radius)
+            {
+                printf("HIT\n");
+            }
+
+            if((min_mars - min_voyager).length() < min_min)
+            {
+                min_min = (min_mars - min_voyager).length();
+                //f_acc = cur;
+                backup = last_experiment;
+                saved_mtick = mtick;
+                found_speed = speed;
+                found_mod = cur;
+                next_angle_offset = real_offset;
+            }
+        }
+    }
+
+    next_half_angle = next_half_angle / angle_subdivisions;
+
+    ///wtf, found mod is a dividor, not a multiplier
+    ///higher mod = slower speed
+    ///?????
+    printf("found_acc %f\n", found_mod);
+    printf("found mindist %f\n", min_min / 1000 / 1000 / 1000);
+    printf("found angle %f\n", next_angle_offset);
+
+    if(c+1 < depth)
+    {
+        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1, cache);
     }
 
     return {backup, saved_mtick};

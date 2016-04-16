@@ -38,6 +38,8 @@ struct orbital
     orbital(double _mass, double _distance, double _speed, double rad = 0);
 
     orbital();
+
+    void manual_update(vec2d new_pos);
 };
 
 #endif // ORBITAL_HPP_INCLUDED

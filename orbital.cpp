@@ -32,3 +32,10 @@ orbital::orbital(double _mass, double _distance, double _speed, double rad)
 }
 
 orbital::orbital(){}
+
+void orbital::manual_update(vec2d new_pos)
+{
+    old_pos = pos;
+
+    pos = new_pos;
+}

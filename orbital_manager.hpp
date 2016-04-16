@@ -55,6 +55,8 @@ struct manager
 
     void tick(float dt_cur, float dt_old);
 
+    void tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes);
+
     void draw(vec2d _pos, vec3f _col, sf::RenderTarget& win, float r = 4);
 
     void draw(orbital& o, sf::RenderTarget& win, float r = 2);
@@ -63,6 +65,7 @@ struct manager
 
 
     vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
+    vector<vector<vec2d>> test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
 
     ///here the test orbital is a member of the manager
     vector<vec2d> test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital);
@@ -73,6 +76,12 @@ struct manager
                     float base_speed, float minimum, float maximum,
                     float angle_offset, float half_angle_cone, float angle_subdivisions,
                     int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
+
+    ///assumes the mass we're testing is negligable
+    ret_info bisect_with_cache(int ticks, float dt_cur, float dt_old,
+                    float base_speed, float minimum, float maximum,
+                    float angle_offset, float half_angle_cone, float angle_subdivisions,
+                    int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0, const std::vector<std::vector<vec2d>>& cache = std::vector<std::vector<vec2d>>());
 
     void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1});
 
