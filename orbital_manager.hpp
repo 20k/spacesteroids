@@ -90,6 +90,10 @@ struct manager
     void plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex);
 
     orbital* get_nearest(vec2d mouse_screen_pos, vec2d screen_dim);
+
+    void restore_from_backup(const std::vector<orbital>& backup);
+
+    std::vector<orbital> make_backup();
 };
 
 

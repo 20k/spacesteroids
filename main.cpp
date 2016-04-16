@@ -298,12 +298,16 @@ int main()
 
             float timestep = dt_s * 1;
 
+            sf::Clock tclk;
+
             ///way too expensive to solve directly
             ///we need to be bisecting with angle as well
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
                                                num_vel_subdivisions, num_recursions, &voyager_probe, target, {earth, sun, jupiter});
+
+            printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 

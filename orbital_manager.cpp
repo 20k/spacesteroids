@@ -277,19 +277,9 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
     return test_ret;
 }
 
+///return min dist and tick instead
 vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
 {
-    std::vector<orbital> old;
-
-    for(auto& i : olist)
-    {
-        old.push_back(*i);
-    }
-
-    //orbital* my_test;
-
-    //my_test = make_new(*test_orbital);
-
     vector<vector<vec2d>> test_ret;
 
     test_ret.resize(info_to_retrieve.size() + 1);
@@ -308,15 +298,9 @@ vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt
 
         test_ret[0].push_back(test_orbital->pos);
 
-        for(auto& j : olist)
+        for(int k=0; k<info_to_retrieve.size(); k++)
         {
-            for(int k=0; k<info_to_retrieve.size(); k++)
-            {
-                if(j == info_to_retrieve[k])
-                {
-                    test_ret[k + 1].push_back(j->pos);
-                }
-            }
+            test_ret[k+1].push_back(info_to_retrieve[k]->pos);
         }
 
         for(int j=0; j<olist.size(); j++)
@@ -327,16 +311,7 @@ vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt
 
             o1->pos = cache[next][j];
             o1->old_pos = cache[i][j];
-
-            //o1->manual_update(cache[i][j]);
         }
-    }
-
-    //destroy(my_test);
-
-    for(int i=0; i<olist.size(); i++)
-    {
-        *olist[i] = old[i];
     }
 
     return test_ret;
@@ -521,6 +496,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
     return object_cache;
 }
 
+///we dont need any info to retrieve
 ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float base_speed, float minimum, float maximum,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,
@@ -551,6 +527,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     if(c == 0)
         cache = get_object_cache(*this, ticks, dt_cur, dt_old);
 
+    std::vector<orbital> orbital_backup = make_backup();
 
     float next_angle_offset = angle_offset;
     float next_half_angle = half_angle_cone;
@@ -591,6 +568,8 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
             auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, cache, info_to_retrieve);
+
+            restore_from_backup(orbital_backup);
 
             int mtick = this->get_minimum_distance(0, which_id, last_experiment);
 
@@ -771,4 +750,31 @@ orbital* manager::get_nearest(vec2d mouse_screen_pos, vec2d screen_dim)
     }
 
     return ret;
+}
+
+void manager::restore_from_backup(const std::vector<orbital>& backup)
+{
+    if(backup.size() != olist.size())
+    {
+        throw std::runtime_error("uuh restore from backup");
+    }
+
+    for(int i=0; i<backup.size(); i++)
+    {
+        *olist[i] = backup[i];
+    }
+}
+
+std::vector<orbital> manager::make_backup()
+{
+    std::vector<orbital> backup;
+
+    backup.reserve(olist.size());
+
+    for(auto& i : olist)
+    {
+        backup.push_back(*i);
+    }
+
+    return backup;
 }
