@@ -109,11 +109,9 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
             ///so its own mass cancels out in the change in velocity calvulations
 
-            vec2d bF12 = (-o1->mass) * r12N * NFac;
+            vec2d bF12 = (-o1->mass * NFac) * r12N;
 
             o2->acc += (bF12);
-
-            //printf("%f %f\n", EXPAND_2(o2->acc));
         }
     }
 
@@ -323,6 +321,7 @@ int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& p
 
     double min_len = DBL_MAX;
 
+    ///requires a whole pass over the data!!! For something we're already calculating!!!
     for(int tnum=0; tnum<pos[o1].size(); tnum++)
     {
         ///test

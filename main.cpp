@@ -272,7 +272,7 @@ int main()
 
             sf::Clock clk;
 
-            int tnum = 50000;
+            int tnum = 300000;
 
             ///keep this one simply because its awesome
             //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
@@ -290,9 +290,9 @@ int main()
             ///relative to velocity
             const float angle_offset = 0.f;
             const float front_half_angle_cone = M_PI/2.f;
-            const float angle_subdivisions = 4;
+            const float angle_subdivisions = 10;
 
-            const int num_vel_subdivisions = 20;
+            const int num_vel_subdivisions = 10;
             const int num_recursions = 5;
 
 
@@ -303,7 +303,7 @@ int main()
             ///way too expensive to solve directly
             ///we need to be bisecting with angle as well
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
-                                               0.1, 0.1, 2000.0,
+                                               0.1, 0.1, 1000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
                                                num_vel_subdivisions, num_recursions, &voyager_probe, target, {earth, sun, jupiter});
 
