@@ -64,11 +64,15 @@ void manager::tick(float dt_cur, float dt_old)
         }
     }
 
+    double dtf = dt_cur / dt_old;
+    double dta = dt_cur * (dt_cur + dt_old)/2.;
+
     for(auto& i : olist)
     {
         vec2d o_pos = i->pos;
 
-        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur + i->unconditional_acc;
+        //i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur + i->unconditional_acc;
+        i->pos = i->pos + (i->pos - i->old_pos) * dtf + i->acc * dta + i->unconditional_acc;
 
         i->old_pos = o_pos;
 
@@ -78,6 +82,12 @@ void manager::tick(float dt_cur, float dt_old)
     }
 }
 
+///if a < radius 2, lower mass attached to higher mass
+///I think there might be insufficient sampling when going really fast
+///ie through a planet
+///which is what is leading to these drastic accelerations
+///could clamp to some reasonable orbital distance, but even then
+///tick needs to return a new dt
 void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes)
 {
     int osize = olist.size();
@@ -115,11 +125,14 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
         }
     }
 
+    double dtf = dt_cur / dt_old;
+    double dta = dt_cur * (dt_cur + dt_old)/2.;
+
     for(auto& i : probes)
     {
         vec2d o_pos = i->pos;
 
-        i->pos = i->pos + (i->pos - i->old_pos) * (dt_cur / dt_old) + i->acc * dt_cur * dt_cur + i->unconditional_acc;
+        i->pos = i->pos + (i->pos - i->old_pos) * dtf + i->acc * dta + i->unconditional_acc;
 
         i->old_pos = o_pos;
 
@@ -186,14 +199,89 @@ void manager::draw(orbital& o, sf::RenderTarget& win, float r)
     o.transitory_draw_col = o.col;
 }
 
+void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget& win, float r)
+{
+    sf::CircleShape shape;
+    shape.setRadius(r);
+
+    shape.setOrigin({shape.getRadius(), shape.getRadius()});
+
+    shape.setFillColor({255, 255, 255});
+
+    for(auto& o : orbitals)
+    {
+        vec2d pos = pos2screen(o->pos);
+
+        vec2f epos = {(float)pos.v[0] + win.getSize().x/2, (float)pos.v[1] + win.getSize().y/2};
+
+        if(epos.v[0] < 0 || epos.v[0] >= win.getSize().x || epos.v[1] < 0 || epos.v[1] >= win.getSize().y)
+            continue;
+
+        if(any_nan(epos))
+            continue;
+
+        shape.setPosition({epos.v[0], epos.v[1]});
+
+        win.draw(shape);
+    }
+}
+
+void draw_bulk_complex(manager& orbital_manager, sf::RenderTarget& win, float r = 2)
+{
+    sf::CircleShape shape;
+    shape.setRadius(r);
+
+    shape.setOrigin({shape.getRadius(), shape.getRadius()});
+
+    shape.setFillColor({255, 255, 255});
+
+    for(auto& o : orbital_manager.olist)
+    {
+        vec2d pos = orbital_manager.pos2screen(o->pos);
+
+        vec2f epos = {(float)pos.v[0] + win.getSize().x/2, (float)pos.v[1] + win.getSize().y/2};
+
+        if(epos.v[0] < 0 || epos.v[0] >= win.getSize().x || epos.v[1] < 0 || epos.v[1] >= win.getSize().y)
+            continue;
+
+        if(any_nan(epos))
+            continue;
+
+        vec2d rad_pos = o->pos + (vec2d){o->radius, 0.f};
+
+        vec2d s_rad_pos = orbital_manager.pos2screen(rad_pos);
+
+        float real_rad = fabs(s_rad_pos.v[0] - pos.v[0]);
+
+        if(real_rad > r)
+            shape.setRadius(real_rad);
+
+        shape.setOrigin({shape.getRadius(), shape.getRadius()});
+
+        vec3f col = o->transitory_draw_col * 255.f;
+
+        shape.setFillColor({col.v[0], col.v[1], col.v[2]});
+
+        shape.setPosition({epos.v[0], epos.v[1]});
+
+        win.draw(shape);
+
+        shape.setRadius(r);
+
+        o->transitory_draw_col = o->col;
+    }
+}
+
 void manager::display(sf::RenderTarget& win, float r)
 {
+    draw_bulk_complex(*this, win, r);
+
     ///just assume
-    for(auto& i : olist)
+    /*for(auto& i : olist)
     {
         //draw(i->pos, i->col, win, r);
         draw(*i, win, r);
-    }
+    }*/
 }
 
 vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render, orbital* test_orbital, std::vector<orbital*> info_to_retrieve)

@@ -124,6 +124,8 @@ int main()
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
+
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
     #ifdef VERIFICATION_SATURN_V
@@ -272,7 +274,7 @@ int main()
 
             sf::Clock clk;
 
-            int tnum = 300000;
+            int tnum = 100000;
 
             ///keep this one simply because its awesome
             //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
@@ -292,8 +294,9 @@ int main()
             const float front_half_angle_cone = M_PI/2.f;
             const float angle_subdivisions = 10;
 
-            const int num_vel_subdivisions = 10;
-            const int num_recursions = 5;
+            const int num_vel_subdivisions = 8;
+
+            const int num_recursions = 4;
 
 
             float timestep = dt_s * 1;
@@ -303,7 +306,7 @@ int main()
             ///way too expensive to solve directly
             ///we need to be bisecting with angle as well
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
-                                               0.1, 0.1, 1000.0,
+                                               0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
                                                num_vel_subdivisions, num_recursions, &voyager_probe, target, {earth, sun, jupiter});
 
@@ -406,9 +409,15 @@ int main()
 
         ///its all drawing time
         if(tick < predefined_max_tick)
+        {
             orbital_manager.tick(dt_s, dt_s);
+
+            orbital_manager.tick_only_probes(dt_s, dt_s, asteroids);
+        }
         else
         {
+            dt_s = 12000;
+
             orbital_manager.get_nearest(m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
             float mod = 0.001f;
@@ -429,17 +438,28 @@ int main()
             ///why the christ isn't orbital manager keeping track of its own last_tick dt?
             if(key.isKeyPressed(sf::Keyboard::F))
             {
-                orbital_manager.tick(dt_s, dt_s);
+                orbital_manager.tick(dt_s, dt_old);
+
+                orbital_manager.tick_only_probes(dt_s, dt_old, asteroids);
             }
+
+            /*for(auto& i : asteroids)
+            {
+                orbital_manager.draw(*i, win, 1);
+            }*/
+
+            orbital_manager.draw_bulk(asteroids, win, 1);
 
             orbital_manager.display(win);
 
-            if(key.isKeyPressed(sf::Keyboard::F))
-                orbital_manager.plot_orbit(voyager_base, 1000, win);
+            //if(key.isKeyPressed(sf::Keyboard::F))
+            //    orbital_manager.plot_orbit(voyager_base, 1000, win);
 
 
             win.display();
             win.clear(sf::Color(0,0,0));
+
+            dt_old = dt_s;
         }
 
         /*if(true)

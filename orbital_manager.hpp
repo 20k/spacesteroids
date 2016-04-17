@@ -12,6 +12,8 @@ struct ret_info
     int mtick;
 };
 
+const static double gravitational_constant = 0.0000000000674;
+
 ///manager* clone
 struct manager
 {
@@ -61,6 +63,9 @@ struct manager
 
     void draw(orbital& o, sf::RenderTarget& win, float r = 2);
 
+    void draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget& win, float r = 2);
+
+
     void display(sf::RenderTarget& win, float r = 2);
 
 
@@ -95,6 +100,73 @@ struct manager
 
     std::vector<orbital> make_backup();
 };
+
+///real asteroid belt mass 3.00E+21 kg
+///avg mass = 0.05% * that
+///
+static
+std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent, int num)
+{
+    std::vector<orbital*> asteroids;
+
+    vec2d base = parent->pos;
+    vec2d body = o->pos;
+
+    double rad = (body - base).length();
+    double angle = (body - base).angle();
+
+    double total_mass = 3 * pow(10, 21);
+    double avg_mass = total_mass / num;
+
+    double exclusion_radius = o->radius * 5.;
+
+    double radius_mod = 0.1;
+
+    double angle_mod = 0.01 * 2 * M_PI;
+
+    for(int i=0; i<num; i++)
+    {
+        double fangle = (double)i/num;
+
+        fangle *= 2 * M_PI;
+
+        fangle += randf_s(-angle_mod, angle_mod);
+
+        double ran_scale = randf_s(0., 1.);
+
+        ran_scale *= ran_scale;
+
+        ran_scale += randf_s(0., 0.1);
+
+        if(randf_s(0., 1.) > 0.5)
+            ran_scale = -ran_scale;
+
+        ran_scale *= radius_mod;
+
+        double frad = rad + ran_scale * rad;
+
+        vec2d pos = radius_angle_to_vec(frad, fangle);
+
+        vec2d global_pos = pos + base;
+
+        if((global_pos - o->pos).length() < exclusion_radius)
+            continue;
+
+        double vel = sqrt(gravitational_constant * parent->mass / frad);
+
+        ///v = sqrt G * mass / rad
+
+        orbital* norbit = new orbital(avg_mass, frad, vel);
+
+        norbit->pos = global_pos;
+
+        norbit->set_speed(vel);
+
+        asteroids.push_back(norbit);
+    }
+
+    return asteroids;
+}
 
 
 /*void simulate(int ticks, float dt_cur, float dt_old)
