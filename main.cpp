@@ -124,7 +124,7 @@ int main()
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
-    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 500);
 
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
@@ -416,7 +416,9 @@ int main()
         }
         else
         {
-            dt_s = 12000;
+            //dt_s = 12000;
+
+            //dt_s += 100.;
 
             orbital_manager.get_nearest(m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
@@ -434,6 +436,15 @@ int main()
             if(key.isKeyPressed(sf::Keyboard::Right))
                 voyager_base->acc.v[0] = 1 * mod;
 
+            if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F))
+                dt_s += 100.;
+
+            if(key.isKeyPressed(sf::Keyboard::H) && key.isKeyPressed(sf::Keyboard::F))
+            {
+                dt_s -= 100.;
+
+                dt_s = max(dt_s, 2000.);
+            }
 
             ///why the christ isn't orbital manager keeping track of its own last_tick dt?
             if(key.isKeyPressed(sf::Keyboard::F))

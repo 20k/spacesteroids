@@ -115,12 +115,14 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
     double rad = (body - base).length();
     double angle = (body - base).angle();
 
-    double total_mass = 3 * pow(10, 21);
+    double mass_mod = 0.01;
+
+    double total_mass = 3 * pow(10, 21) * mass_mod;
     double avg_mass = total_mass / num;
 
-    double exclusion_radius = o->radius * 5.;
+    double exclusion_radius = o->radius * 2.;
 
-    double radius_mod = 0.1;
+    double radius_mod = 0.9;
 
     double angle_mod = 0.01 * 2 * M_PI;
 
