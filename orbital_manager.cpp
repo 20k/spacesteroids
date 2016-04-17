@@ -88,7 +88,7 @@ void manager::tick(float dt_cur, float dt_old)
 ///which is what is leading to these drastic accelerations
 ///could clamp to some reasonable orbital distance, but even then
 ///tick needs to return a new dt
-void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes)
+void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes, bool absorption)
 {
     int osize = olist.size();
 
@@ -102,6 +102,9 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
         {
             orbital* o2 = probes[j];
 
+            if(o2->skip)
+                continue;
+
             double G = 0.0000000000674;
 
             vec2d r12 = (o2->pos - o1->pos);
@@ -112,8 +115,20 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
             ///???
             ///radius of jupiter
-            if(r12l < 69911 * pow(10, 3))
-                r12l = 69911 * pow(10, 3);
+            if(!absorption)
+            {
+                if(r12l < 69911 * pow(10, 3))
+                    r12l = 69911 * pow(10, 3);
+            }
+            else
+            {
+                if(r12l < o1->radius * 4.)
+                {
+                    o2->skip = true;
+
+                    continue;
+                }
+            }
 
             double NFac = G / (r12l * r12l);
 
@@ -130,6 +145,9 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
     for(auto& i : probes)
     {
+        if(i->skip)
+            continue;
+
         vec2d o_pos = i->pos;
 
         i->pos = i->pos + (i->pos - i->old_pos) * dtf + i->acc * dta + i->unconditional_acc;
@@ -220,6 +238,9 @@ void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget&
         if(any_nan(epos))
             continue;
 
+        if(o->skip)
+            continue;
+
         shape.setPosition({epos.v[0], epos.v[1]});
 
         win.draw(shape);
@@ -229,7 +250,6 @@ void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget&
 void draw_bulk_complex(manager& orbital_manager, sf::RenderTarget& win, float r = 2)
 {
     sf::CircleShape shape;
-    shape.setRadius(r);
 
     shape.setOrigin({shape.getRadius(), shape.getRadius()});
 
@@ -255,6 +275,8 @@ void draw_bulk_complex(manager& orbital_manager, sf::RenderTarget& win, float r 
 
         if(real_rad > r)
             shape.setRadius(real_rad);
+        else
+            shape.setRadius(r);
 
         shape.setOrigin({shape.getRadius(), shape.getRadius()});
 
@@ -265,8 +287,6 @@ void draw_bulk_complex(manager& orbital_manager, sf::RenderTarget& win, float r 
         shape.setPosition({epos.v[0], epos.v[1]});
 
         win.draw(shape);
-
-        shape.setRadius(r);
 
         o->transitory_draw_col = o->col;
     }
@@ -409,8 +429,10 @@ int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& p
 
     double min_len = DBL_MAX;
 
+    int len = pos[o1].size();
+
     ///requires a whole pass over the data!!! For something we're already calculating!!!
-    for(int tnum=0; tnum<pos[o1].size(); tnum++)
+    for(int tnum=0; tnum < len; tnum++)
     {
         ///test
         vec2d d1 = pos[o1][tnum];
@@ -827,6 +849,9 @@ orbital* manager::get_nearest(vec2d mouse_screen_pos, vec2d screen_dim)
 
     for(auto& i : olist)
     {
+        if(i->skip)
+            continue;
+
         double ndist = (i->pos - world_pos).length();
 
         if(ndist < min_dist)

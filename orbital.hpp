@@ -28,6 +28,8 @@ struct orbital
 
     double radius;
 
+    bool skip = false;
+
     void set_speed(double speed);
 
     void set_speed(double speed, vec2d dir);

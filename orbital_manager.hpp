@@ -57,7 +57,7 @@ struct manager
 
     void tick(float dt_cur, float dt_old);
 
-    void tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes);
+    void tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes, bool absorption = false);
 
     void draw(vec2d _pos, vec3f _col, sf::RenderTarget& win, float r = 4);
 
@@ -122,9 +122,11 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
 
     double exclusion_radius = o->radius * 2.;
 
-    double radius_mod = 0.9;
+    double radius_mod = 0.5;
 
     double angle_mod = 0.01 * 2 * M_PI;
+
+    double velocity_mod = 0.1;
 
     for(int i=0; i<num; i++)
     {
@@ -155,6 +157,10 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
             continue;
 
         double vel = sqrt(gravitational_constant * parent->mass / frad);
+
+        double vel_rand = randf_s(-velocity_mod, velocity_mod) * vel;
+
+        vel += vel_rand;
 
         ///v = sqrt G * mass / rad
 

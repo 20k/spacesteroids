@@ -74,7 +74,7 @@ bool once()
 int main()
 {
     sf::ContextSettings settings;
-    settings.antialiasingLevel = 4;
+    settings.antialiasingLevel = 2;
 
     sf::RenderWindow win;
     win.create(sf::VideoMode(1200, 800), "hi", sf::Style::Default, settings);
@@ -124,7 +124,7 @@ int main()
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
-    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 500);
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 1000);
 
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
@@ -412,14 +412,10 @@ int main()
         {
             orbital_manager.tick(dt_s, dt_s);
 
-            orbital_manager.tick_only_probes(dt_s, dt_s, asteroids);
+            orbital_manager.tick_only_probes(dt_s, dt_s, asteroids, true);
         }
         else
         {
-            //dt_s = 12000;
-
-            //dt_s += 100.;
-
             orbital_manager.get_nearest(m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
             float mod = 0.001f;
@@ -451,7 +447,7 @@ int main()
             {
                 orbital_manager.tick(dt_s, dt_old);
 
-                orbital_manager.tick_only_probes(dt_s, dt_old, asteroids);
+                orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
             }
 
             /*for(auto& i : asteroids)
@@ -465,7 +461,6 @@ int main()
 
             //if(key.isKeyPressed(sf::Keyboard::F))
             //    orbital_manager.plot_orbit(voyager_base, 1000, win);
-
 
             win.display();
             win.clear(sf::Color(0,0,0));
