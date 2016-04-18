@@ -92,6 +92,7 @@ int main()
     sun->radius = 696342.f * pow(10, 3);
 
 
+    ///change to array, reload me on load
     orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 6371 * pow(10, 3)));
     //orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 6371 * pow(10, 3)));
 
@@ -135,6 +136,8 @@ int main()
 
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
+
+    std::vector<orbital**> mainstream_orbitals = {&sun, &earth, &mercury, &venus, &mars, &jupiter, &saturn, &uranus, &neptune, &pluto, &voyager_base};
 
     std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
 
@@ -279,8 +282,8 @@ int main()
         ///although then again, do I?
         if(once<sf::Mouse::Right>() && win.hasFocus())
         {
-            //orbital voyager_probe = *earth;
-            orbital voyager_probe = *voyager_base;
+            orbital voyager_probe = *earth;
+            //orbital voyager_probe = *voyager_base;
             voyager_probe.mass = 721.9;
             voyager_probe.col = {1, 0, 0};
 
@@ -301,7 +304,7 @@ int main()
 
             #define MOUSE_TARGETTING
             #ifdef MOUSE_TARGETTING
-            target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             #endif // MOUSE_TARGETTING
 
             ///relative to velocity
@@ -482,6 +485,12 @@ int main()
             {
                 orbital_manager.olist = load_from_file("planets.txt", dt_s, dt_old);
                 asteroids = load_from_file("asteroids.txt", dt_s, dt_old);
+
+                ///fixme
+                for(int i=0; i<mainstream_orbitals.size(); i++)
+                {
+                    *mainstream_orbitals[i] = orbital_manager.olist[i];
+                }
             }
 
 

@@ -1,5 +1,8 @@
 #include "orbital.hpp"
 
+double dt_s = 12000 / 1;
+double dt_old = dt_s;
+
 void orbital::set_speed(double speed)
 {
     old_pos = perpendicular(pos).norm() * speed * dt_s + pos;

@@ -8,8 +8,8 @@
 
 typedef vec<2, double> vec2d;
 
-static double dt_s = 12000 / 1;
-static double dt_old = dt_s;
+extern double dt_s;
+extern double dt_old;
 
 struct orbital
 {
