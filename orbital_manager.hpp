@@ -176,6 +176,56 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
     return asteroids;
 }
 
+///we need to save dt_s and old dt_s
+static
+void save_to_file(const std::string& file, const std::vector<orbital*>& orbitals, double t_dt, double t_dt_old)
+{
+    FILE* pFile = fopen(file.c_str(), "wb");
+
+    fwrite(&t_dt, sizeof(double), 1, pFile);
+    fwrite(&t_dt_old, sizeof(double), 1, pFile);
+
+    for(auto& i : orbitals)
+    {
+        fwrite(i, sizeof(orbital), 1, pFile);
+    }
+
+    fclose(pFile);
+}
+
+
+static
+std::vector<orbital*> load_from_file(const std::string& file, double& t_dt, double& t_dt_old)
+{
+    FILE* pFile = fopen(file.c_str(), "rb");
+
+    fread(&t_dt, sizeof(double), 1, pFile);
+    fread(&t_dt_old, sizeof(double), 1, pFile);
+
+    std::vector<orbital*> ret;
+
+    while(true)
+    {
+        orbital o;
+
+        size_t num = fread(&o, sizeof(orbital), 1, pFile);
+
+        if(num == 1)
+        {
+            orbital* no = new orbital(o);
+
+            ret.push_back(no);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    fclose(pFile);
+
+    return ret;
+}
 
 /*void simulate(int ticks, float dt_cur, float dt_old)
 {

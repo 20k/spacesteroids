@@ -71,6 +71,7 @@ bool once()
 ///satellite based missiles?
 ///reposition planets
 
+///we need a save/load
 int main()
 {
     sf::ContextSettings settings;
@@ -135,7 +136,7 @@ int main()
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
-    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 10000);
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
 
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
@@ -235,7 +236,8 @@ int main()
         if(key.isKeyPressed(sf::Keyboard::Space))
             printf("%f %f\n", dmouse, manager::scale);
 
-        manager::scale -= dmouse;
+        if(win.hasFocus())
+            manager::scale -= dmouse;
 
         if(manager::scale < 0.001)
             manager::scale = 0.001;
@@ -275,7 +277,7 @@ int main()
 
         ///need to fiddle with constant acceleration rather than impulse
         ///although then again, do I?
-        if(once<sf::Mouse::Right>())
+        if(once<sf::Mouse::Right>() && win.hasFocus())
         {
             //orbital voyager_probe = *earth;
             orbital voyager_probe = *voyager_base;
@@ -417,7 +419,7 @@ int main()
             }*/
         }
 
-        if(key.isKeyPressed(sf::Keyboard::Escape))
+        if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())
             win.close();
 
         ///its all drawing time
@@ -445,21 +447,21 @@ int main()
             if(key.isKeyPressed(sf::Keyboard::Right))
                 voyager_base->acc.v[0] = 1 * mod;
 
-            if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F))
+            if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
                 dt_s += 100.;
 
-            if(key.isKeyPressed(sf::Keyboard::H) && key.isKeyPressed(sf::Keyboard::F))
+            if(key.isKeyPressed(sf::Keyboard::H) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
             {
                 dt_s -= 100.;
 
                 dt_s = max(dt_s, 2000.);
             }
 
-            if(once<sf::Keyboard::R>())
+            if(once<sf::Keyboard::R>() && win.hasFocus())
                 toggled_going = !toggled_going;
 
             ///why the christ isn't orbital manager keeping track of its own last_tick dt?
-            if(key.isKeyPressed(sf::Keyboard::F) || toggled_going)
+            if((key.isKeyPressed(sf::Keyboard::F) && win.hasFocus()) || toggled_going)
             {
                 ///split into calculate and apply so we can do everything atomically?
                 orbital_manager.tick(dt_s, dt_old);
@@ -467,10 +469,18 @@ int main()
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
             }
 
-            /*for(auto& i : asteroids)
+            if(once<sf::Keyboard::Num1>() && win.hasFocus())
             {
-                orbital_manager.draw(*i, win, 1);
-            }*/
+                save_to_file("planets.txt", orbital_manager.olist, dt_s, dt_old);
+                save_to_file("asteroids.txt", asteroids, dt_s, dt_old);
+            }
+
+            if(once<sf::Keyboard::Num0>() && win.hasFocus())
+            {
+                orbital_manager.olist = load_from_file("planets.txt", dt_s, dt_old);
+                asteroids = load_from_file("asteroids.txt", dt_s, dt_old);
+            }
+
 
             orbital_manager.draw_bulk(asteroids, win, 1);
 
