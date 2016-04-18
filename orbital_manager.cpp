@@ -683,7 +683,14 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
         }
     }
 
+    std::vector<orbital*> stream_add;
+
+    if(!is_target_part_of_mainstream_list)
+        stream_add.push_back(target_orbital);
+
     std::vector<orbital> orbital_backup = make_backup();
+
+    orbital target_backup = *target_orbital;
 
     float next_angle_offset = angle_offset;
     float next_half_angle = half_angle_cone;
@@ -723,9 +730,12 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
-            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, {}, cache, info_to_retrieve);
+            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
+
+            if(!is_target_part_of_mainstream_list)
+                *target_orbital = target_backup;
 
             int mtick = this->get_minimum_distance(0, which_id, last_experiment);
 
