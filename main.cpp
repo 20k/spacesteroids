@@ -91,40 +91,51 @@ int main()
     sun->radius = 696342.f * pow(10, 3);
 
 
-    orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 6371 * pow(10, 3)));
+    orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 6371 * pow(10, 3)));
+    //orbital* earth = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 6371 * pow(10, 3)));
 
     earth->col = {0.2f, 0.2f, 1.f};
 
     std::cout << "pos " << earth->pos <<  " opos " << earth->old_pos << std::endl;
 
-    orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3), 2440 * pow(10, 3)));
+    orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 46. * pow(10, 9), 58.98 * pow(10, 3), 2440 * pow(10, 3)));
+    //orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3), 2440 * pow(10, 3)));
 
-    orbital* venus = orbital_manager.make_new(orbital(4.87 * pow(10, 24), 108.2 * pow(10, 9), 35.02 * pow(10, 3), 6052 * pow(10, 3)));
+    orbital* venus = orbital_manager.make_new(orbital(4.87 * pow(10, 24), 107.48 * pow(10, 9), 35.26 * pow(10, 3), 6052 * pow(10, 3)));
+    //orbital* venus = orbital_manager.make_new(orbital(4.87 * pow(10, 24), 108.2 * pow(10, 9), 35.02 * pow(10, 3), 6052 * pow(10, 3)));
 
-    orbital* mars = orbital_manager.make_new(orbital(6.42 * pow(10, 23), 227.9 * pow(10, 9), 24.077 * pow(10, 3), 3390 * pow(10, 3)));
+    orbital* mars = orbital_manager.make_new(orbital(6.42 * pow(10, 23), 206.62 * pow(10, 9), 26.50 * pow(10, 3), 3390 * pow(10, 3)));
+    //orbital* mars = orbital_manager.make_new(orbital(6.42 * pow(10, 23), 227.9 * pow(10, 9), 24.077 * pow(10, 3), 3390 * pow(10, 3)));
 
+    ///orbits as we have them are not quite correct, jupiter/saturn should be in a 2/1 resonance
 
-    orbital* jupiter = orbital_manager.make_new(orbital(1.9 * pow(10, 27), 778.3 * pow(10, 9), 13.07 * pow(10, 3), 69911 * pow(10, 3)));
+    orbital* jupiter = orbital_manager.make_new(orbital(1.9 * pow(10, 27), 740.52 * pow(10, 9), 13.72 * pow(10, 3), 69911 * pow(10, 3)));
+    //orbital* jupiter = orbital_manager.make_new(orbital(1.9 * pow(10, 27), 778.3 * pow(10, 9), 13.07 * pow(10, 3), 69911 * pow(10, 3)));
 
-    orbital* saturn = orbital_manager.make_new(orbital(5.69 * pow(10, 26), 1427. * pow(10, 9), 9.69 * pow(10, 3), 58232 * pow(10, 3)));
+    orbital* saturn = orbital_manager.make_new(orbital(5.69 * pow(10, 26), 1352.55 * pow(10, 9), 10.18 * pow(10, 3), 58232 * pow(10, 3)));
+    //orbital* saturn = orbital_manager.make_new(orbital(5.69 * pow(10, 26), 1427. * pow(10, 9), 9.69 * pow(10, 3), 58232 * pow(10, 3)));
 
     ///hehe. I get to laugh at uranus because I wrote this
-    orbital* uranus = orbital_manager.make_new(orbital(8.68 * pow(10, 25), 2861. * pow(10, 9), 6.81 * pow(10, 3), 25362 * pow(10, 3)));
+    orbital* uranus = orbital_manager.make_new(orbital(8.68 * pow(10, 25), 2741.30 * pow(10, 9), 7.11 * pow(10, 3), 25362 * pow(10, 3)));
+    //orbital* uranus = orbital_manager.make_new(orbital(8.68 * pow(10, 25), 2861. * pow(10, 9), 6.81 * pow(10, 3), 25362 * pow(10, 3)));
 
-    orbital* neptune = orbital_manager.make_new(orbital(1.02 * pow(10, 26), 4497.1 * pow(10, 9), 5.43 * pow(10, 3), 24622 * pow(10, 3)));
+    orbital* neptune = orbital_manager.make_new(orbital(1.02 * pow(10, 26), 4444.45 * pow(10, 9), 5.50 * pow(10, 3), 24622 * pow(10, 3)));
+    //orbital* neptune = orbital_manager.make_new(orbital(1.02 * pow(10, 26), 4497.1 * pow(10, 9), 5.43 * pow(10, 3), 24622 * pow(10, 3)));
 
     ///we will define pluto at its closest point to the sun, ie smallest distance + largest velocity
     ///the eccentricity will not be correct relative the other planets, but as they're all perfect circles that's just dandy at the moment
     ///we need everything's rotation from the centre, /time offset, whatever its called
     ///nope, make it aphelion, otherwise its inside neptune
+    ///this is the only one thats defined at aphelion
     orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
+    //orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
 
-    orbital* voyager_base = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 149.6 * pow(10, 9), 30. * pow(10, 3), 2));
+    orbital* voyager_base = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 2));
 
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
-    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 1000);
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 10000);
 
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
@@ -187,9 +198,11 @@ int main()
 
     sf::Keyboard key;
 
-    int predefined_max_tick = 40000;
+    int predefined_max_tick = 10000;
 
     vector<vector<vec2d>> last_experiment;
+
+    bool toggled_going = false;
 
     while(win.isOpen())
     {
@@ -442,9 +455,13 @@ int main()
                 dt_s = max(dt_s, 2000.);
             }
 
+            if(once<sf::Keyboard::R>())
+                toggled_going = !toggled_going;
+
             ///why the christ isn't orbital manager keeping track of its own last_tick dt?
-            if(key.isKeyPressed(sf::Keyboard::F))
+            if(key.isKeyPressed(sf::Keyboard::F) || toggled_going)
             {
+                ///split into calculate and apply so we can do everything atomically?
                 orbital_manager.tick(dt_s, dt_old);
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
@@ -479,6 +496,11 @@ int main()
         tick++;
 
         day += (dt_s / 60) / 60 / 24;
+
+        if(key.isKeyPressed(sf::Keyboard::T))
+        {
+            printf("%f day\n", day);
+        }
 
         //printf("%f day\n", day);
     }

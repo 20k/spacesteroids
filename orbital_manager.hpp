@@ -126,7 +126,7 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
 
     double angle_mod = 0.01 * 2 * M_PI;
 
-    double velocity_mod = 0.1;
+    double velocity_mod = 0.2;
 
     for(int i=0; i<num; i++)
     {

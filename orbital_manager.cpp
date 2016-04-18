@@ -128,6 +128,27 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
                     continue;
                 }
+
+                /*vec2d line_to_hit = point2line_shortest(o2->pos, o2->pos - o2->old_pos, o1->pos);
+
+                vec2d line_point = line_to_hit + o1->pos;
+
+                double basis_length = (o2->pos - o2->old_pos).length();
+
+                bool valid_skip_candidate = false;
+
+                ///deliberately lax condition
+                if((line_point - o2->pos).length() < basis_length*4. || (line_point - o2->old_pos).length() < basis_length*4.)
+                {
+                    valid_skip_candidate = true;
+                }
+
+                ///need to limit to perp
+                if(line_to_hit.squared_length() < o1->radius*o1->radius * 64 && valid_skip_candidate)
+                {
+                    o2->skip = true;
+                    continue;
+                }*/
             }
 
             double NFac = G / (r12l * r12l);
