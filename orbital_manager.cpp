@@ -262,9 +262,15 @@ void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget&
         if(o->skip)
             continue;
 
+        vec3f col = o->transitory_draw_col * 255.f;
+
+        shape.setFillColor({col.v[0], col.v[1], col.v[2]});
+
         shape.setPosition({epos.v[0], epos.v[1]});
 
         win.draw(shape);
+
+         o->transitory_draw_col = o->col;
     }
 }
 
@@ -405,7 +411,7 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 }
 
 ///return min dist and tick instead
-vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
+vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
 {
     vector<vector<vec2d>> test_ret;
 
@@ -416,12 +422,16 @@ vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt
         i.reserve(ticks);
     }
 
+    std::vector<orbital*> to_insert = to_insert_into_stream;
+
+    to_insert.push_back(test_orbital);
+
     for(int i=0; i<ticks-1; i++)
     {
         if(i == 0)
-            tick_only_probes(dt_cur, dt_old, {test_orbital});
+            tick_only_probes(dt_cur, dt_old, to_insert);
         else
-            tick_only_probes(dt_cur, dt_cur, {test_orbital});
+            tick_only_probes(dt_cur, dt_cur, to_insert);
 
         test_ret[0].push_back(test_orbital->pos);
 
@@ -644,6 +654,11 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
         }
     }
 
+    ///need to fold target_orbital into olist if it doesn't already exist there
+    ///target orbital needs to be manually reset if this is the case
+    ///with the advent of save/load/etc, we can no longer safely pass in earth sun moon
+    ///without at least redefining them first
+
     ///add target orbital if its not found
     if(which_id == -1)
     {
@@ -656,6 +671,17 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     if(c == 0)
         cache = get_object_cache(*this, ticks, dt_cur, dt_old);
+
+    bool is_target_part_of_mainstream_list = false;
+
+    for(auto& i : olist)
+    {
+        if(i == target_orbital)
+        {
+            is_target_part_of_mainstream_list = true;
+            break;
+        }
+    }
 
     std::vector<orbital> orbital_backup = make_backup();
 
@@ -697,7 +723,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
-            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, cache, info_to_retrieve);
+            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, {}, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
 
@@ -861,14 +887,14 @@ void manager::plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex)
     }
 }
 
-orbital* manager::get_nearest(vec2d mouse_screen_pos, vec2d screen_dim)
+orbital* manager::get_nearest(const std::vector<orbital*>& orbitals, vec2d mouse_screen_pos, vec2d screen_dim)
 {
     vec2d world_pos = screen2pos(mouse_screen_pos, screen_dim/2.);
 
     double min_dist = DBL_MAX;
     orbital* ret = nullptr;
 
-    for(auto& i : olist)
+    for(auto& i : orbitals)
     {
         if(i->skip)
             continue;

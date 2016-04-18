@@ -301,7 +301,7 @@ int main()
 
             #define MOUSE_TARGETTING
             #ifdef MOUSE_TARGETTING
-            target = orbital_manager.get_nearest(m, wh * 2.);
+            target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
             #endif // MOUSE_TARGETTING
 
             ///relative to velocity
@@ -431,21 +431,24 @@ int main()
         }
         else
         {
-            orbital_manager.get_nearest(m, wh * 2.)->transitory_draw_col = {1, 0, 0};
+            orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
             float mod = 0.001f;
 
-            if(key.isKeyPressed(sf::Keyboard::Up))
-                voyager_base->acc.v[1] = -1 * mod;
+            if(win.hasFocus())
+            {
+                if(key.isKeyPressed(sf::Keyboard::Up))
+                    voyager_base->acc.v[1] = -1 * mod;
 
-            if(key.isKeyPressed(sf::Keyboard::Down))
-                voyager_base->acc.v[1] = 1 * mod;
+                if(key.isKeyPressed(sf::Keyboard::Down))
+                    voyager_base->acc.v[1] = 1 * mod;
 
-            if(key.isKeyPressed(sf::Keyboard::Left))
-                voyager_base->acc.v[0] = -1 * mod;
+                if(key.isKeyPressed(sf::Keyboard::Left))
+                    voyager_base->acc.v[0] = -1 * mod;
 
-            if(key.isKeyPressed(sf::Keyboard::Right))
-                voyager_base->acc.v[0] = 1 * mod;
+                if(key.isKeyPressed(sf::Keyboard::Right))
+                    voyager_base->acc.v[0] = 1 * mod;
+            }
 
             if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
                 dt_s += 100.;
