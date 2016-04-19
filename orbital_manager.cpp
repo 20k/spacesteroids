@@ -817,6 +817,17 @@ double get_min_dist(std::vector<orbital*>& orbs, orbital* test_orbital)
     return min_dist;
 }
 
+bool manager::contains(orbital* o)
+{
+    for(auto& i : olist)
+    {
+        if(i == o)
+            return true;
+    }
+
+    return false;
+}
+
 ///gunna have to progressively refine over several frames
 vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital)
 {
@@ -829,6 +840,10 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
         old.push_back(*i);
     }
 
+    bool in_mainstream_tick = contains(test_orbital);
+
+    orbital backup = *test_orbital;
+
     std::vector<vec2d> test_ret;
 
     float dt_current = dt_min;
@@ -837,6 +852,11 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
     for(int i=0; i<ticks; i++)
     {
         tick(dt_current, dt_last);
+
+        if(!in_mainstream_tick)
+        {
+            tick_only_probes(dt_current, dt_last, {test_orbital}, false);
+        }
 
         test_ret.push_back(test_orbital->pos);
 
@@ -864,12 +884,15 @@ vector<vec2d> manager::test_with_adaptive_tick(int ticks, float dt_max, float dt
 
         ///this is the skip for above
         dt_current = dt_min;
+
     }
 
     for(int i=0; i<olist.size(); i++)
     {
         *olist[i] = old[i];
     }
+
+    *test_orbital = backup;
 
     return test_ret;
 }

@@ -55,6 +55,8 @@ struct manager
         return pos;
     }
 
+    bool contains(orbital* o);
+
     void tick(float dt_cur, float dt_old);
 
     void tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes, bool absorption = false);

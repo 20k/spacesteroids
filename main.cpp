@@ -132,15 +132,22 @@ int main()
     orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
     //orbital* pluto = orbital_manager.make_new(orbital(1.309 * pow(10, 22), 7375.93 * pow(10, 9), 3.71 * pow(10, 3), 1187 * pow(10, 3)));
 
-    orbital* voyager_base = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 2));
+    orbital* voyager_base = new orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 2);
+    //orbital* voyager_base = orbital_manager.make_new(orbital(5.962 * pow(10., 24.), 147.09 * pow(10, 9), 30.29 * pow(10, 3), 2));
 
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
-    std::vector<orbital**> mainstream_orbitals = {&sun, &earth, &mercury, &venus, &mars, &jupiter, &saturn, &uranus, &neptune, &pluto, &voyager_base};
+    std::vector<orbital**> mainstream_orbitals = {&sun, &earth, &mercury, &venus, &mars, &jupiter, &saturn, &uranus, &neptune, &pluto};
 
     std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
 
+
+    std::vector<orbital*> player_satellites;
+
+    player_satellites.push_back(new orbital(*voyager_base));
+
+    orbital* currently_in_control = player_satellites[0];
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
     #ifdef VERIFICATION_SATURN_V
@@ -283,7 +290,7 @@ int main()
         if(once<sf::Mouse::Right>() && win.hasFocus())
         {
             orbital voyager_probe = *earth;
-            //orbital voyager_probe = *voyager_base;
+            //orbital voyager_probe = *currently_in_control;
             voyager_probe.mass = 721.9;
             voyager_probe.col = {1, 0, 0};
 
@@ -441,16 +448,16 @@ int main()
             if(win.hasFocus())
             {
                 if(key.isKeyPressed(sf::Keyboard::Up))
-                    voyager_base->acc.v[1] = -1 * mod;
+                    currently_in_control->acc.v[1] = -1 * mod;
 
                 if(key.isKeyPressed(sf::Keyboard::Down))
-                    voyager_base->acc.v[1] = 1 * mod;
+                    currently_in_control->acc.v[1] = 1 * mod;
 
                 if(key.isKeyPressed(sf::Keyboard::Left))
-                    voyager_base->acc.v[0] = -1 * mod;
+                    currently_in_control->acc.v[0] = -1 * mod;
 
                 if(key.isKeyPressed(sf::Keyboard::Right))
-                    voyager_base->acc.v[0] = 1 * mod;
+                    currently_in_control->acc.v[0] = 1 * mod;
             }
 
             if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
@@ -473,6 +480,8 @@ int main()
                 orbital_manager.tick(dt_s, dt_old);
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
+
+                orbital_manager.tick_only_probes(dt_s, dt_old, player_satellites, false);
             }
 
             if(once<sf::Keyboard::Num1>() && win.hasFocus())
@@ -495,11 +504,15 @@ int main()
 
 
             orbital_manager.draw_bulk(asteroids, win, 1);
+            orbital_manager.draw_bulk(player_satellites, win, 2);
 
             orbital_manager.display(win);
 
-            //if(key.isKeyPressed(sf::Keyboard::F))
+            if(key.isKeyPressed(sf::Keyboard::F))
+                orbital_manager.plot_orbit(currently_in_control, 1000, win);
+
             //    orbital_manager.plot_orbit(voyager_base, 1000, win);
+
 
             win.display();
             win.clear(sf::Color(0,0,0));
