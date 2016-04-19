@@ -655,7 +655,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
 ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float base_speed, float minimum, float maximum,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,
-                         int num_per_step, int depth, orbital* test_orbital, orbital* target_orbital,
+                         int num_per_step, int depth, double target_distance, orbital* test_orbital, orbital* target_orbital,
                          std::vector<orbital*> info_to_retrieve, int c,
                          const std::vector<std::vector<vec2d>>& passed_cache,
                          int last_found_minimum_tick)
@@ -779,7 +779,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
-            double target_distance = 40. * 1000 * 1000 * 1000;
+            //double target_distance = 10. * 1000 * 1000 * 1000;
 
             int mtick;
             double mdist;
@@ -833,7 +833,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     if(c+1 < depth)
     {
-        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
+        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, target_distance, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
     }
 
     test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);

@@ -149,6 +149,10 @@ int main()
 
     orbital* currently_in_control = player_satellites[0];
 
+    //orbital* target_to_circularise = nullptr;
+
+    target_info current_target;
+
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
 
@@ -323,6 +327,13 @@ int main()
             //target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             #endif // MOUSE_TARGETTING
 
+            //target_to_circularise = target;
+
+            current_target.target = target;
+            current_target.me = currently_in_control;
+
+            current_target.target_distance = 10. * 1000 * 1000 * 1000;
+
             ///relative to velocity
             ///accurate settings
             /*const float angle_offset = 0.f;
@@ -340,6 +351,8 @@ int main()
             const int num_vel_subdivisions = 5;
 
             const int num_recursions = 6;
+
+            //const double target_distance = 10. * 1000 * 1000 * 1000;
 
 
             float timestep = dt_s * 1;
@@ -366,7 +379,7 @@ int main()
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
-                                               num_vel_subdivisions, num_recursions, probe, target);
+                                               num_vel_subdivisions, num_recursions, current_target.target_distance, probe, target);
 
             printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
@@ -402,6 +415,35 @@ int main()
 
             if(target != sun)
                 currently_in_control->old_pos = currently_in_control->old_pos - diff;
+        }
+
+        ///we need to pick the correct retrograde
+        if(current_target.target != nullptr)
+        {
+            double diff = (currently_in_control->pos - current_target.target->pos).length();
+
+            if(diff < current_target.target_distance * 1.2)
+            {
+                double rad = diff;
+
+                double orbital_velocity = current_target.target->get_orbital_velocity(rad);
+
+                ///need to add orbital velocity of sun?
+
+                ///we need to get the current speed, not the mean orbital speed
+                //currently_in_control->orbit_speed(sun->get_orbital_velocity((currently_in_control->pos - sun->pos).length()), sun->pos);
+
+                //vec2d diff = currently_in_control->pos - currently_in_control->old_pos;
+
+                vec2d diff = current_target.target->pos - current_target.target->old_pos;
+
+                currently_in_control->orbit_speed(orbital_velocity, current_target.target->pos);
+
+                if(current_target.target != sun)
+                    currently_in_control->old_pos = currently_in_control->old_pos - diff;
+
+                current_target.target = nullptr;
+            }
         }
 
         if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())
