@@ -42,3 +42,8 @@ void orbital::manual_update(vec2d new_pos)
 
     pos = new_pos;
 }
+
+orbital* orbital::clone()
+{
+    return new orbital(*this);
+}

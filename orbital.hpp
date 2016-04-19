@@ -42,6 +42,8 @@ struct orbital
     orbital();
 
     void manual_update(vec2d new_pos);
+
+    orbital* clone();
 };
 
 #endif // ORBITAL_HPP_INCLUDED

@@ -82,13 +82,17 @@ struct manager
     ret_info bisect(int ticks, float dt_cur, float dt_old,
                     float base_speed, float minimum, float maximum,
                     float angle_offset, float half_angle_cone, float angle_subdivisions,
-                    int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
+                    int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr,
+                    std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0);
 
     ///assumes the mass we're testing is negligable
-    ret_info bisect_with_cache(int ticks, float dt_cur, float dt_old,
-                    float base_speed, float minimum, float maximum,
-                    float angle_offset, float half_angle_cone, float angle_subdivisions,
-                    int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0, const std::vector<std::vector<vec2d>>& cache = std::vector<std::vector<vec2d>>());
+    ret_info bisect_with_cache (int ticks, float dt_cur, float dt_old,
+                                float base_speed, float minimum, float maximum,
+                                float angle_offset, float half_angle_cone, float angle_subdivisions,
+                                int num_per_step, int depth, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr,
+                                std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0,
+                                const std::vector<std::vector<vec2d>>& cache = std::vector<std::vector<vec2d>>(),
+                                int last_found_minimum_tick = -1);
 
     void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1});
 
@@ -101,6 +105,8 @@ struct manager
     void restore_from_backup(const std::vector<orbital>& backup);
 
     std::vector<orbital> make_backup();
+
+    manager* clone();
 };
 
 ///real asteroid belt mass 3.00E+21 kg

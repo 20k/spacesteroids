@@ -149,6 +149,9 @@ int main()
 
     orbital* currently_in_control = player_satellites[0];
 
+    ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
+    ///need for right click to work
+
     ///lets keep this purely for fluff reasons. The materials we use will rock
     #ifdef VERIFICATION_SATURN_V
     ship ss1;
@@ -301,6 +304,8 @@ int main()
 
             int tnum = 100000;
 
+            //int earth_saturn_tick_time = 80000;
+
             ///keep this one simply because its awesome
             //auto info = orbital_manager.bisect(tnum, 40, 1., 10.0, 15, 3, &voyager_probe, saturn, {earth, sun, jupiter});
 
@@ -311,17 +316,27 @@ int main()
 
             #define MOUSE_TARGETTING
             #ifdef MOUSE_TARGETTING
-            target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            //target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             #endif // MOUSE_TARGETTING
 
             ///relative to velocity
-            const float angle_offset = 0.f;
+            ///accurate settings
+            /*const float angle_offset = 0.f;
             const float front_half_angle_cone = M_PI/2.f;
             const float angle_subdivisions = 10;
 
             const int num_vel_subdivisions = 8;
 
-            const int num_recursions = 4;
+            const int num_recursions = 4;*/
+
+            const float angle_offset = 0.f;
+            const float front_half_angle_cone = M_PI/2.f;
+            const float angle_subdivisions = 5;
+
+            const int num_vel_subdivisions = 5;
+
+            const int num_recursions = 6;
 
 
             float timestep = dt_s * 1;
@@ -330,6 +345,21 @@ int main()
 
             ///way too expensive to solve directly
             ///we need to be bisecting with angle as well
+            ///need to save list, and then advance probe along over dt_s intervals
+            ///this way we can completely divorce this entirely from the main simulation
+            ///or we can just ban time acceleration while firing probes
+            ///but thats pretty lame
+            ///we also need to do this with a ->clone (safe mutex)
+            ///then advance the result we get back by the time elapsed
+            ///this will allow us to asynchronously calculate trajectories and remain real time, even if they take multiple seconds
+            ///we can't async... otherwise the probe will teleport. We'd have to do it advance
+
+            ///so we're optimising this then
+            ///we need to pinpoint the minimum in at least the second/third iteration, then terminate after 10% (or w/e) more than that
+            ///in terms of time after the tick
+            ///may make it invalid though. Progressively refine - c == 0 || c == 1 -> 100%, after reduce by (100 - (c - 2) / (max_c - 2))?
+
+            ///if the retrieve thing is target, we get a min_dist error
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
@@ -438,6 +468,10 @@ int main()
             orbital_manager.tick(dt_s, dt_s);
 
             orbital_manager.tick_only_probes(dt_s, dt_s, asteroids, true);
+
+            day += (dt_s / 60) / 60 / 24;
+
+            tick++;
         }
         else
         {
@@ -482,6 +516,9 @@ int main()
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, player_satellites, false);
+
+                day += (dt_s / 60) / 60 / 24;
+                tick++;
             }
 
             if(once<sf::Keyboard::Num1>() && win.hasFocus())
@@ -528,9 +565,8 @@ int main()
             win.clear(sf::Color(0,0,0));
         }*/
 
-        tick++;
 
-        day += (dt_s / 60) / 60 / 24;
+        //day += (dt_s / 60) / 60 / 24;
 
         if(key.isKeyPressed(sf::Keyboard::T))
         {

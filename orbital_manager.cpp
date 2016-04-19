@@ -642,17 +642,18 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,
                          int num_per_step, int depth, orbital* test_orbital, orbital* target_orbital,
                          std::vector<orbital*> info_to_retrieve, int c,
-                         const std::vector<std::vector<vec2d>>& passed_cache)
+                         const std::vector<std::vector<vec2d>>& passed_cache,
+                         int last_found_minimum_tick)
 {
     int which_id = -1;
 
-    for(int i=0; i<info_to_retrieve.size(); i++)
+    /*for(int i=0; i<info_to_retrieve.size(); i++)
     {
         if(info_to_retrieve[i] == target_orbital)
         {
             which_id = i + 1;
         }
-    }
+    }*/
 
     ///need to fold target_orbital into olist if it doesn't already exist there
     ///target orbital needs to be manually reset if this is the case
@@ -969,4 +970,20 @@ std::vector<orbital> manager::make_backup()
     }
 
     return backup;
+}
+
+///hmm. We'll also need to own the probes and stuff
+///maybe we
+manager* manager::clone()
+{
+    manager* nmanager = new manager(*this);
+
+    nmanager->olist.clear();
+
+    for(auto& i : olist)
+    {
+        nmanager->make_new(*i);
+    }
+
+    return nmanager;
 }
