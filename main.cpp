@@ -292,10 +292,13 @@ int main()
         ///although then again, do I?
         if(once<sf::Mouse::Right>() && win.hasFocus())
         {
-            orbital voyager_probe = *earth;
+            /*orbital voyager_probe = *earth;
             //orbital voyager_probe = *currently_in_control;
             voyager_probe.mass = 721.9;
-            voyager_probe.col = {1, 0, 0};
+            voyager_probe.col = {1, 0, 0};*/
+
+            orbital* probe = currently_in_control;
+
 
             float base_speed = dt_s;
 
@@ -363,26 +366,27 @@ int main()
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
-                                               num_vel_subdivisions, num_recursions, &voyager_probe, target, {earth, sun, jupiter});
+                                               num_vel_subdivisions, num_recursions, probe, target, {earth, sun, jupiter});
 
             printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
-            double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
-
-            printf("min_dist %f\n", min_dist / 1000 / 1000 / 1000);
-
             printf("Time %f\n", clk.getElapsedTime().asMilliseconds() / 1000.f);
+
+
+            //double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
+
+            //printf("min_dist %f\n", min_dist / 1000 / 1000 / 1000);
+
 
             printf("time course takes %f years\n", info.mtick * timestep / 60 / 60 / 24 / 365);
 
             system("pause");
 
-
             ///tomorrow's homework
             ///shoot probes out in all directions, see which ones come closest to target
-            for(int i=0; i<tnum; i++)
+            /*for(int i=0; i<tnum; i++)
             {
                 orbital_manager.plot_all(info.ret, i, win, {{0, 1, 0}, {1, 0, 0}, earth->col, sun->col});
 
@@ -396,12 +400,7 @@ int main()
                     //win.display();
                     //win.display();
                     win.display();
-                    /*win.display();
-                    win.display();
-                    win.display();
-                    win.display();
-                    win.display();
-                    win.display();*/
+
                     win.clear();
                 }
 
@@ -428,7 +427,7 @@ int main()
                 if(manager::scale < 1)
                     manager::scale = 1;
 
-            }
+            }*/
 
             /*
             ///voyager, mars

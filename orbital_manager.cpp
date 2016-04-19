@@ -411,20 +411,23 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 }
 
 ///return min dist and tick instead
-vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
+void manager::test_with_cache(int ticks, float dt_cur, float dt_old, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
 {
-    vector<vector<vec2d>> test_ret;
+    /*vector<vector<vec2d>> test_ret;
 
     test_ret.resize(info_to_retrieve.size() + 1);
 
     for(auto& i : test_ret)
     {
         i.reserve(ticks);
-    }
+    }*/
 
     std::vector<orbital*> to_insert = to_insert_into_stream;
 
     to_insert.push_back(test_orbital);
+
+    int mtick = -1;
+    double mdist = DBL_MAX;
 
     for(int i=0; i<ticks-1; i++)
     {
@@ -433,12 +436,20 @@ vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt
         else
             tick_only_probes(dt_cur, dt_cur, to_insert);
 
-        test_ret[0].push_back(test_orbital->pos);
+        double len = (test_orbital->pos - target_orbital->pos).length();
+
+        if(len < mdist)
+        {
+            mdist = len;
+            mtick = i;
+        }
+
+        /*test_ret[0].push_back(test_orbital->pos);
 
         for(int k=0; k<info_to_retrieve.size(); k++)
         {
             test_ret[k+1].push_back(info_to_retrieve[k]->pos);
-        }
+        }*/
 
         for(int j=0; j<olist.size(); j++)
         {
@@ -446,12 +457,14 @@ vector<vector<vec2d>> manager::test_with_cache(int ticks, float dt_cur, float dt
 
             int next = i + 1;
 
-            o1->pos = cache[next][j];
+            ///dont need to access cache for both of these
             o1->old_pos = cache[i][j];
+            o1->pos = cache[next][j];
         }
     }
 
-    return test_ret;
+    min_tick = mtick;
+    min_dist = mdist;
 }
 
 int manager::get_minimum_distance(int o1, int o2, const vector<vector<vec2d>>& pos)
@@ -679,13 +692,12 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     bool short_path_opt = last_found_minimum_tick < 0.1f * ticks;
 
-
     if(c >= tick_reduction_start)
     {
         int sampled_minimum = last_found_minimum_tick;
 
-        float extension_max_frac = 0.1f;
-        float extension_minimum_frac = 0.01f;
+        float extension_max_frac = 0.2f;
+        float extension_minimum_frac = 0.05f;
 
         float current_frac = (float)(c - tick_reduction_start) / (depth - tick_reduction_start);
 
@@ -765,29 +777,38 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
-            auto last_experiment = this->test_with_cache(this_ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
+            int mtick;
+            double mdist;
+
+            this->test_with_cache(this_ticks, dt_cur, dt_old, mtick, mdist, &probe, target_orbital, stream_add, cache, info_to_retrieve);
+            //auto last_experiment = this->test_with_cache(this_ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
 
             if(!is_target_part_of_mainstream_list)
                 *target_orbital = target_backup;
 
-            int mtick = this->get_minimum_distance(0, which_id, last_experiment);
+            ///eliminate this call
+            //int mtick = this->get_minimum_distance(0, which_id, last_experiment);
 
 
-            vec2d min_voyager = last_experiment[0][mtick];
+            /*vec2d min_voyager = last_experiment[0][mtick];
             vec2d min_mars = last_experiment[which_id][mtick];
 
             if((min_mars - min_voyager).length() < target_orbital->radius)
             {
                 printf("HIT\n");
-            }
+            }*/
 
-            if((min_mars - min_voyager).length() < min_min)
+            //if(mdist < target)
+
+            //if((min_mars - min_voyager).length() < min_min)
+            if(mdist < min_min)
             {
-                min_min = (min_mars - min_voyager).length();
+                min_min = mdist;
+                //min_min = (min_mars - min_voyager).length();
                 //f_acc = cur;
-                backup = last_experiment;
+                //backup = last_experiment;
                 saved_mtick = mtick;
                 found_speed = speed;
                 found_mod = cur;
@@ -809,6 +830,8 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     {
         return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
     }
+
+    test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);
 
     return {backup, saved_mtick};
 }

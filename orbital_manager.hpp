@@ -71,8 +71,8 @@ struct manager
     void display(sf::RenderTarget& win, float r = 2);
 
 
-    vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
-    vector<vector<vec2d>> test_with_cache(int ticks, float dt_cur, float dt_old, orbital* test_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
+    vector<vector<vec2d>> test           (int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
+    void test_with_cache(int ticks, float dt_cur, float dt_old, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
 
     ///here the test orbital is a member of the manager
     vector<vec2d> test_with_adaptive_tick(int ticks, float dt_max, float dt_min, float dt_old, orbital* test_orbital);
