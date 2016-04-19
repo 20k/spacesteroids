@@ -413,7 +413,7 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 }
 
 ///return min dist and tick instead
-void manager::test_with_cache(int ticks, float dt_cur, float dt_old, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache)
+void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double target_distance, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache)
 {
     /*vector<vector<vec2d>> test_ret;
 
@@ -440,9 +440,9 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, int& min_ti
 
         double len = (test_orbital->pos - target_orbital->pos).length();
 
-        if(len < mdist)
+        if(fabs(len - target_distance) < mdist)
         {
-            mdist = len;
+            mdist = fabs(len - target_distance);
             mtick = i;
         }
 
@@ -779,10 +779,12 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
+            double target_distance = 40. * 1000 * 1000 * 1000;
+
             int mtick;
             double mdist;
 
-            this->test_with_cache(this_ticks, dt_cur, dt_old, mtick, mdist, &probe, target_orbital, stream_add, cache);
+            this->test_with_cache(this_ticks, dt_cur, dt_old, target_distance, mtick, mdist, &probe, target_orbital, stream_add, cache);
             //auto last_experiment = this->test_with_cache(this_ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
@@ -805,6 +807,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             //if(mdist < target)
 
             //if((min_mars - min_voyager).length() < min_min)
+            //if((mdist - target_distance) < min_min)
             if(mdist < min_min)
             {
                 min_min = mdist;
