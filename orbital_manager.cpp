@@ -1,5 +1,7 @@
 #include "orbital_manager.hpp"
 
+double gravitational_constant = 0.0000000000674;
+
 double manager::scale = 12.;
 vec2d manager::offset;
 

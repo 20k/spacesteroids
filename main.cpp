@@ -366,7 +366,7 @@ int main()
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
-                                               num_vel_subdivisions, num_recursions, probe, target, {earth, sun, jupiter});
+                                               num_vel_subdivisions, num_recursions, probe, target);
 
             printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
@@ -379,83 +379,9 @@ int main()
 
             //printf("min_dist %f\n", min_dist / 1000 / 1000 / 1000);
 
-
             printf("time course takes %f years\n", info.mtick * timestep / 60 / 60 / 24 / 365);
 
             system("pause");
-
-            ///tomorrow's homework
-            ///shoot probes out in all directions, see which ones come closest to target
-            /*for(int i=0; i<tnum; i++)
-            {
-                orbital_manager.plot_all(info.ret, i, win, {{0, 1, 0}, {1, 0, 0}, earth->col, sun->col});
-
-                if(info.mtick == i)
-                    system("pause");
-
-                int every = 1;
-
-                if(i % every == 0)
-                {
-                    //win.display();
-                    //win.display();
-                    win.display();
-
-                    win.clear();
-                }
-
-                float dmouse = 0;
-
-                while(win.pollEvent(event))
-                {
-                    if(event.type == sf::Event::Closed)
-                        win.close();
-
-                    if(event.type == sf::Event::MouseWheelScrolled)
-                    {
-                        dmouse += event.mouseWheelScroll.delta;
-                    }
-                }
-
-                if(key.isKeyPressed(sf::Keyboard::LShift))
-                {
-                    dmouse *= 5.f;
-                }
-
-                manager::scale -= dmouse;
-
-                if(manager::scale < 1)
-                    manager::scale = 1;
-
-            }*/
-
-            /*
-            ///voyager, mars
-            int min_tick = orbital_manager.get_minimum_distance(0, 2, last_experiment);
-
-            vec2d min_voyager = last_experiment[0][min_tick];
-            vec2d min_mars = last_experiment[2][min_tick];
-
-            if((min_mars - min_voyager).length() < mars->radius)
-            {
-                printf("HIT\n");
-            }
-
-            printf("min %i dist %f\n", min_tick, (min_mars - min_voyager).length() / 1000. / 1000. / 1000.);*/
-
-            //int min_tick = orbital_manager.get_minimum_distance(10000, &voyager_probe, &mars);
-
-            //printf("")
-
-            //system("pause");
-
-            /*for(int j=0; j<last_experiment[1].size(); j++)
-            {
-                orbital_manager.plot(last_experiment, 1, j, win);
-
-                win.display();
-                win.clear(sf::Color(0,0,0));
-            }*/
         }
 
         if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())

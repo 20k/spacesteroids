@@ -12,7 +12,7 @@ struct ret_info
     int mtick;
 };
 
-const static double gravitational_constant = 0.0000000000674;
+extern double gravitational_constant;
 
 ///manager* clone
 struct manager

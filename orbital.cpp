@@ -24,6 +24,13 @@ void orbital::accelerate_relative_to_velocity(double amount, double angle_offset
     unconditional_acc = unconditional_acc + vel_dir.rot(angle_offset).norm() * amount * time_s * time_s;
 }
 
+double orbital::get_orbital_velocity(double distance)
+{
+    double vel = sqrt(gravitational_constant * mass / distance);
+
+    return vel;
+}
+
 orbital::orbital(double _mass, double _distance, double _speed, double rad)
 {
     mass = _mass;

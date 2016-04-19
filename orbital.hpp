@@ -10,6 +10,7 @@ typedef vec<2, double> vec2d;
 
 extern double dt_s;
 extern double dt_old;
+extern double gravitational_constant;
 
 struct orbital
 {
@@ -36,6 +37,8 @@ struct orbital
 
     ///amount in ms
     void accelerate_relative_to_velocity(double amount, double angle_offset, double time_s);
+
+    double get_orbital_velocity(double distance);
 
     orbital(double _mass, double _distance, double _speed, double rad = 0);
 
