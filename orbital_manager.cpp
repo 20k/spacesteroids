@@ -673,6 +673,40 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     if(c == 0)
         cache = get_object_cache(*this, ticks, dt_cur, dt_old);
 
+    int this_ticks = ticks;
+
+    int tick_reduction_start = 1;
+
+    bool short_path_opt = last_found_minimum_tick < 0.1f * ticks;
+
+
+    if(c >= tick_reduction_start)
+    {
+        int sampled_minimum = last_found_minimum_tick;
+
+        float extension_max_frac = 0.1f;
+        float extension_minimum_frac = 0.01f;
+
+        float current_frac = (float)(c - tick_reduction_start) / (depth - tick_reduction_start);
+
+        ///start at 1, go to 0
+        current_frac = 1.f - current_frac;
+
+        ///extension_max_frac -> 0
+        float extension_frac = (extension_max_frac - extension_minimum_frac) * current_frac + extension_minimum_frac;
+
+        if(c == 1 && !short_path_opt)
+            extension_frac = 0.5f;
+
+        int tick_extension = ticks * extension_frac;
+
+        this_ticks = last_found_minimum_tick + tick_extension;
+
+        printf("%i found tick, allowed max tick %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension);
+
+        this_ticks = min(this_ticks, ticks-1);
+    }
+
     bool is_target_part_of_mainstream_list = false;
 
     for(auto& i : olist)
@@ -731,7 +765,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             probe.accelerate_relative_to_velocity(speed, real_offset, 1200);
 
-            auto last_experiment = this->test_with_cache(ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
+            auto last_experiment = this->test_with_cache(this_ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
 
@@ -773,7 +807,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     if(c+1 < depth)
     {
-        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1, cache);
+        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
     }
 
     return {backup, saved_mtick};
@@ -781,6 +815,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
 void manager::plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col)
 {
+    if(which_tick >= elements[which_element].size())
+        return;
+
     vec2d pos = elements[which_element][which_tick];
 
     draw(pos, col, win, 4);
