@@ -413,7 +413,7 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 }
 
 ///return min dist and tick instead
-void manager::test_with_cache(int ticks, float dt_cur, float dt_old, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache, std::vector<orbital*> info_to_retrieve)
+void manager::test_with_cache(int ticks, float dt_cur, float dt_old, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache)
 {
     /*vector<vector<vec2d>> test_ret;
 
@@ -782,7 +782,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             int mtick;
             double mdist;
 
-            this->test_with_cache(this_ticks, dt_cur, dt_old, mtick, mdist, &probe, target_orbital, stream_add, cache, info_to_retrieve);
+            this->test_with_cache(this_ticks, dt_cur, dt_old, mtick, mdist, &probe, target_orbital, stream_add, cache);
             //auto last_experiment = this->test_with_cache(this_ticks, dt_cur, dt_old, &probe, stream_add, cache, info_to_retrieve);
 
             restore_from_backup(orbital_backup);
