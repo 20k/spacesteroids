@@ -384,6 +384,26 @@ int main()
             system("pause");
         }
 
+        if(once<sf::Mouse::Middle>())
+        {
+            orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+
+            double rad = (currently_in_control->pos - target->pos).length();
+
+            double orbital_velocity = target->get_orbital_velocity(rad);
+
+            ///need to add orbital velocity of sun?
+
+            currently_in_control->orbit_speed(sun->get_orbital_velocity((currently_in_control->pos - sun->pos).length()), sun->pos);
+
+            vec2d diff = currently_in_control->pos - currently_in_control->old_pos;
+
+            currently_in_control->orbit_speed(orbital_velocity, target->pos);
+
+            if(target != sun)
+                currently_in_control->old_pos = currently_in_control->old_pos - diff;
+        }
+
         if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())
             win.close();
 

@@ -31,6 +31,8 @@ struct orbital
 
     bool skip = false;
 
+    void orbit_speed(double speed, vec2d parent);
+
     void set_speed(double speed);
 
     void set_speed(double speed, vec2d dir);

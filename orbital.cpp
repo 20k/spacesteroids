@@ -3,6 +3,16 @@
 double dt_s = 12000 / 1;
 double dt_old = dt_s;
 
+void orbital::orbit_speed(double speed, vec2d parent)
+{
+    vec2d rel = pos - parent;
+
+    ///this is orbital tangent
+    vec2d tangent = perpendicular(rel).norm();
+
+    old_pos = tangent * speed * dt_s + pos;
+}
+
 void orbital::set_speed(double speed)
 {
     old_pos = perpendicular(pos).norm() * speed * dt_s + pos;
@@ -30,6 +40,8 @@ double orbital::get_orbital_velocity(double distance)
 
     return vel;
 }
+
+/// xi - xi-1 = vi-1 * dti-1 + 0.5 * ai-1 * dti-1 * dti-1
 
 orbital::orbital(double _mass, double _distance, double _speed, double rad)
 {
