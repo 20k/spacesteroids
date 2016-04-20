@@ -282,15 +282,17 @@ int main()
 
         vec2d m = {(double)mouse.getPosition(win).x, (double)mouse.getPosition(win).y};
 
-        vec2d world_p = manager::screen2pos(m, wh);
+        /*vec2d world_p = manager::screen2pos(m, wh);
 
-        /*if(once<sf::Mouse::Left>())
+        if(once<sf::Mouse::Left>() && win.hasFocus())
         {
             orbital* getrekd = orbital_manager.make_new();
-            getrekd->mass = pow(10., 3.);
+            getrekd->mass = pow(10., 30.); ///10^32 = black hole,  10^27 = jupiter, 10^30 = sun
             getrekd->pos = world_p;
-            getrekd->set_speed(13.07 * pow(10, 3) * 10, {0, -1});
+            getrekd->set_speed(13.07 * pow(10, 3) * 1, {0, -1});
         }*/
+
+        ///for some reason, the circularisation is not working 100%, if transferring between two orbits
 
         ///need to fiddle with constant acceleration rather than impulse
         ///although then again, do I?
@@ -332,7 +334,7 @@ int main()
             current_target.target = target;
             current_target.me = currently_in_control;
 
-            current_target.target_distance = 10. * 1000 * 1000 * 1000;
+            current_target.target_distance = 1. * 1000 * 1000 * 1000;
 
             ///relative to velocity
             ///accurate settings
@@ -385,12 +387,7 @@ int main()
 
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
-            printf("Time %f\n", clk.getElapsedTime().asMilliseconds() / 1000.f);
-
-
-            //double min_dist = (info.ret[0][info.mtick] - info.ret[1][info.mtick]).length();
-
-            //printf("min_dist %f\n", min_dist / 1000 / 1000 / 1000);
+            printf("Time %f\n", clk.getElapsedTime().asMilliseconds() / 1000.f);;
 
             printf("time course takes %f years\n", info.mtick * timestep / 60 / 60 / 24 / 365);
 

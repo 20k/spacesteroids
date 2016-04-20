@@ -424,6 +424,8 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         i.reserve(ticks);
     }*/
 
+    auto backup = make_backup();
+
     std::vector<orbital*> to_insert = to_insert_into_stream;
 
     to_insert.push_back(test_orbital);
@@ -431,8 +433,28 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
     int mtick = -1;
     double mdist = DBL_MAX;
 
+    ///we want to simulate
+    ///tick
+    ///tick_only_probes
+
     for(int i=0; i<ticks-1; i++)
     {
+        ///do a tick here
+        ///so cache[0] is before tick
+        ///cache[1] is after tick
+        for(int j=0; j<olist.size(); j++)
+        {
+            orbital* o1 = olist[j];
+
+            //int next = i + 1;
+            int next = i;
+
+            ///dont need to access cache for both of these
+            //o1->old_pos = cache[i][j];
+            o1->old_pos = cache[i][j];
+            o1->pos = cache[i+1][j];
+        }
+
         if(i == 0)
             tick_only_probes(dt_cur, dt_old, to_insert);
         else
@@ -452,18 +474,12 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         {
             test_ret[k+1].push_back(info_to_retrieve[k]->pos);
         }*/
-
-        for(int j=0; j<olist.size(); j++)
-        {
-            orbital* o1 = olist[j];
-
-            int next = i + 1;
-
-            ///dont need to access cache for both of these
-            o1->old_pos = cache[i][j];
-            o1->pos = cache[next][j];
-        }
     }
+
+    restore_from_backup(backup);
+
+    ///we're forgetting to reset pos and old_pos
+    ///that is the issue
 
     min_tick = mtick;
     min_dist = mdist;
