@@ -352,11 +352,11 @@ int main()
 
             const float angle_offset = 0.f;
             const float front_half_angle_cone = M_PI/2.f;
-            const float angle_subdivisions = 10;
+            const float angle_subdivisions = 3;
 
-            const int num_vel_subdivisions = 10;
+            const int num_vel_subdivisions = 3;
 
-            const int num_recursions = 8;
+            const int num_recursions = 16;
 
             //const double target_distance = 10. * 1000 * 1000 * 1000;
 
@@ -364,6 +364,9 @@ int main()
             float timestep = dt_s * 1;
 
             sf::Clock tclk;
+
+            ///if mindist > 1
+            ///redo after some amount of distance
 
             ///way too expensive to solve directly
             ///we need to be bisecting with angle as well
@@ -398,7 +401,7 @@ int main()
             system("pause");
         }
 
-        if(once<sf::Mouse::Middle>())
+        /*if(once<sf::Mouse::Middle>())
         {
             orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
 
@@ -416,7 +419,7 @@ int main()
 
             if(target != sun)
                 currently_in_control->old_pos = currently_in_control->old_pos - diff;
-        }
+        }*/
 
         if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())
             win.close();
@@ -472,7 +475,6 @@ int main()
                 ///split into calculate and apply so we can do everything atomically?
                 orbital_manager.tick(dt_s, dt_old);
 
-
                 ///we need to pick the correct retrograde
                 if(current_target.target != nullptr)
                 {
@@ -486,13 +488,6 @@ int main()
                         double rad = diff;
 
                         double orbital_velocity = current_target.target->get_orbital_velocity(rad);
-
-                        ///need to add orbital velocity of sun?
-
-                        ///we need to get the current speed, not the mean orbital speed
-                        //currently_in_control->orbit_speed(sun->get_orbital_velocity((currently_in_control->pos - sun->pos).length()), sun->pos);
-
-                        //vec2d diff = currently_in_control->pos - currently_in_control->old_pos;
 
                         vec2d diff = current_target.target->pos - current_target.target->old_pos;
 
