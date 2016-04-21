@@ -9,6 +9,8 @@ using namespace std;
 #include "orbital_manager.hpp"
 #include "spaceship.hpp"
 
+#include "manoeuvre.hpp"
+
 
 ///has the button been pressed once, and only once
 template<sf::Keyboard::Key k>
@@ -223,6 +225,7 @@ int main()
 
     bool toggled_going = false;
 
+    ///thread the rendering
     while(win.isOpen())
     {
         sf::Clock ftime;
@@ -332,8 +335,6 @@ int main()
             //target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             #endif // MOUSE_TARGETTING
 
-            //target_to_circularise = target;
-
             current_target.target = target;
             current_target.me = currently_in_control;
 
@@ -363,26 +364,10 @@ int main()
 
             const int num_recursions = 20;
 
-            //const double target_distance = 10. * 1000 * 1000 * 1000;
-
-
-            float timestep = dt_s * 1;
-
             sf::Clock tclk;
 
             ///if mindist > 1
             ///redo after some amount of distance
-
-            ///way too expensive to solve directly
-            ///we need to be bisecting with angle as well
-            ///need to save list, and then advance probe along over dt_s intervals
-            ///this way we can completely divorce this entirely from the main simulation
-            ///or we can just ban time acceleration while firing probes
-            ///but thats pretty lame
-            ///we also need to do this with a ->clone (safe mutex)
-            ///then advance the result we get back by the time elapsed
-            ///this will allow us to asynchronously calculate trajectories and remain real time, even if they take multiple seconds
-            ///we can't async... otherwise the probe will teleport. We'd have to do it advance
 
             ///so we're optimising this then
             ///we need to pinpoint the minimum in at least the second/third iteration, then terminate after 10% (or w/e) more than that
@@ -390,7 +375,7 @@ int main()
             ///may make it invalid though. Progressively refine - c == 0 || c == 1 -> 100%, after reduce by (100 - (c - 2) / (max_c - 2))?
 
             ///if the retrieve thing is target, we get a min_dist error
-            auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
+            auto info = orbital_manager.bisect_with_cache(tnum, dt_s, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
                                                num_vel_subdivisions, num_recursions, current_target.target_distance, max_error_distance, probe, target);
@@ -550,15 +535,6 @@ int main()
 
             dt_old = dt_s;
         }
-
-        /*if(true)
-        {
-            orbital_manager.display(win);
-
-            win.display();
-            win.clear(sf::Color(0,0,0));
-        }*/
-
 
         //day += (dt_s / 60) / 60 / 24;
 
