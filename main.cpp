@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sfml/graphics.hpp>
 #include <vec/vec.hpp>
+#include <omp.h>
 
 using namespace std;
 
@@ -224,6 +225,8 @@ int main()
 
     while(win.isOpen())
     {
+        sf::Clock ftime;
+
         float dmouse = 0;
 
         while(win.pollEvent(event))
@@ -358,7 +361,7 @@ int main()
 
             const int num_vel_subdivisions = 3;
 
-            const int num_recursions = 32;
+            const int num_recursions = 20;
 
             //const double target_distance = 10. * 1000 * 1000 * 1000;
 
@@ -565,6 +568,11 @@ int main()
         }
 
         //printf("%f day\n", day);
+
+        if(key.isKeyPressed(sf::Keyboard::B))
+        {
+            printf("%f ftime\n", ftime.getElapsedTime().asMicroseconds() / 1000.f);
+        }
     }
 
     cout << "Hello world!" << endl;

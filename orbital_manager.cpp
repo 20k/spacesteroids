@@ -45,21 +45,23 @@ void manager::tick(float dt_cur, float dt_old)
 
             vec2d r12 = (o2->pos - o1->pos);
 
-            double r12l = r12.length_d();
+            double r12l = r12.length();
 
             vec2d r12N = r12 / max(r12l, 1.);
 
+            const double rad = 69911 * pow(10, 3);
+
             ///???
             ///radius of jupiter
-            if(r12l < 69911 * pow(10, 3))
-                r12l = 69911 * pow(10, 3);
+            if(r12l < rad)
+                r12l = rad;
 
             double NFac = G / (r12l * r12l);
 
             ///so its own mass cancels out in the change in velocity calvulations
 
-            vec2d aF12 =  o2->mass * r12N * NFac;
-            vec2d bF12 = (-o1->mass) * r12N * NFac;
+            vec2d aF12 = ( o2->mass * NFac) * r12N;
+            vec2d bF12 = (-o1->mass * NFac) * r12N;
 
             o1->acc += (aF12);
             o2->acc += (bF12);
@@ -111,7 +113,7 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
             vec2d r12 = (o2->pos - o1->pos);
 
-            double r12l = r12.length_d();
+            double r12l = r12.length();
 
             vec2d r12N = r12 / max(r12l, 1.);
 
@@ -243,11 +245,13 @@ void manager::draw(orbital& o, sf::RenderTarget& win, float r)
 void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget& win, float r)
 {
     sf::CircleShape shape;
+
     shape.setRadius(r);
-
     shape.setOrigin({shape.getRadius(), shape.getRadius()});
-
     shape.setFillColor({255, 255, 255});
+    shape.setPointCount(6);
+
+    vec3f last_col = {0,0,0};
 
     for(auto& o : orbitals)
     {
@@ -266,13 +270,14 @@ void manager::draw_bulk(const std::vector<orbital*>& orbitals, sf::RenderTarget&
 
         vec3f col = o->transitory_draw_col * 255.f;
 
-        shape.setFillColor({col.v[0], col.v[1], col.v[2]});
+        if(col.v[0] != last_col.v[0] || col.v[1] != last_col.v[1] || col.v[2] != last_col.v[2])
+            shape.setFillColor({col.v[0], col.v[1], col.v[2]});
 
         shape.setPosition({epos.v[0], epos.v[1]});
 
         win.draw(shape);
 
-         o->transitory_draw_col = o->col;
+        o->transitory_draw_col = o->col;
     }
 }
 
@@ -424,6 +429,8 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         i.reserve(ticks);
     }*/
 
+    const bool weight = true;
+
     auto backup = make_backup();
 
     std::vector<orbital*> to_insert = to_insert_into_stream;
@@ -446,11 +453,7 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         {
             orbital* o1 = olist[j];
 
-            //int next = i + 1;
-            int next = i;
-
             ///dont need to access cache for both of these
-            //o1->old_pos = cache[i][j];
             o1->old_pos = cache[i][j];
             o1->pos = cache[i+1][j];
         }
@@ -674,17 +677,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          int num_per_step, int depth, double target_distance, double max_error_distance, orbital* test_orbital, orbital* target_orbital,
                          std::vector<orbital*> info_to_retrieve, int c,
                          const std::vector<std::vector<vec2d>>& passed_cache,
-                         int last_found_minimum_tick)
+                         int last_found_minimum_tick, int last_last_found_minimum_tick)
 {
     int which_id = -1;
-
-    /*for(int i=0; i<info_to_retrieve.size(); i++)
-    {
-        if(info_to_retrieve[i] == target_orbital)
-        {
-            which_id = i + 1;
-        }
-    }*/
 
     ///need to fold target_orbital into olist if it doesn't already exist there
     ///target orbital needs to be manually reset if this is the case
@@ -710,8 +705,15 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     bool short_path_opt = last_found_minimum_tick < 0.1f * ticks;
 
+    ///do better tick reduction based on past, itll probably be more accurate
     if(c >= tick_reduction_start)
     {
+        int tick_differential = last_found_minimum_tick - last_last_found_minimum_tick;
+
+        int atick_diff = fabs(tick_differential);
+
+        printf("T1 %i\n", atick_diff);
+
         int sampled_minimum = last_found_minimum_tick;
 
         float extension_max_frac = 0.2f;
@@ -730,9 +732,13 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         int tick_extension = ticks * extension_frac;
 
+        int tick_differential_extension = last_found_minimum_tick + atick_diff * 8 + tick_extension * 0.01 + 50;// * extension_frac;
+
         this_ticks = last_found_minimum_tick + tick_extension;
 
-        printf("%i found tick, allowed max tick %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension);
+        printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
+
+        this_ticks = min(this_ticks, tick_differential_extension);
 
         this_ticks = min(this_ticks, ticks-1);
     }
@@ -747,6 +753,8 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             break;
         }
     }
+
+    const float distance_weight_at_max_time = 1.1;
 
     std::vector<orbital*> stream_add;
 
@@ -808,6 +816,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             if(!is_target_part_of_mainstream_list)
                 *target_orbital = target_backup;
 
+            ///give a minor weighting to time to pick a shorter journey
+            float weighted_distance = mdist + (distance_weight_at_max_time - 1.f) * mdist * (float)mtick / ticks;
+
             ///eliminate this call
             //int mtick = this->get_minimum_distance(0, which_id, last_experiment);
 
@@ -824,9 +835,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
             //if((min_mars - min_voyager).length() < min_min)
             //if((mdist - target_distance) < min_min)
-            if(mdist < min_min)
+            if(weighted_distance < min_min)
             {
-                min_min = mdist;
+                min_min = weighted_distance;
                 //min_min = (min_mars - min_voyager).length();
                 //f_acc = cur;
                 //backup = last_experiment;
@@ -849,7 +860,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     if(c+1 < depth && min_min >= max_error_distance)
     {
-        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, target_distance, max_error_distance, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
+        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, target_distance, max_error_distance, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick, last_found_minimum_tick);
     }
 
     test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);
@@ -1030,7 +1041,7 @@ void manager::restore_from_backup(const std::vector<orbital>& backup)
 {
     if(backup.size() != olist.size())
     {
-        throw std::runtime_error("uuh restore from backup");
+        //throw std::runtime_error("uuh restore from backup");
     }
 
     for(int i=0; i<backup.size(); i++)

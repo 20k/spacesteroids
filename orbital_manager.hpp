@@ -92,7 +92,7 @@ struct manager
                                 int num_per_step, int depth, double target_distance, double max_error_distance, orbital* test_orbital = nullptr, orbital* target_orbital = nullptr,
                                 std::vector<orbital*> info_to_retrieve = std::vector<orbital*>(), int c = 0,
                                 const std::vector<std::vector<vec2d>>& cache = std::vector<std::vector<vec2d>>(),
-                                int last_found_minimum_tick = -1);
+                                int last_found_minimum_tick = -1, int last_last_found_minimum_tick = -1);
 
     void plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col = {1, 1, 1});
 
