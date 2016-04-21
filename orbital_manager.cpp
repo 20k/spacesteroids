@@ -671,7 +671,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
 ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float base_speed, float minimum, float maximum,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,
-                         int num_per_step, int depth, double target_distance, orbital* test_orbital, orbital* target_orbital,
+                         int num_per_step, int depth, double target_distance, double max_error_distance, orbital* test_orbital, orbital* target_orbital,
                          std::vector<orbital*> info_to_retrieve, int c,
                          const std::vector<std::vector<vec2d>>& passed_cache,
                          int last_found_minimum_tick)
@@ -847,9 +847,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     printf("found mindist %f\n", min_min / 1000 / 1000 / 1000);
     printf("found angle %f\n", next_angle_offset);
 
-    if(c+1 < depth)
+    if(c+1 < depth && min_min >= max_error_distance)
     {
-        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, target_distance, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
+        return bisect_with_cache(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, target_distance, max_error_distance, test_orbital, target_orbital, info_to_retrieve, c+1, cache, saved_mtick);
     }
 
     test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);

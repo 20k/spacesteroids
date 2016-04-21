@@ -340,6 +340,8 @@ int main()
             ///or it seems to be the tick in between
             current_target.target_distance = 0;//1. * 1000 * 1000 * 1000;
 
+            const double max_error_distance = 0.1 * 1000 * 1000 * 1000;
+
             ///relative to velocity
             ///accurate settings
             /*const float angle_offset = 0.f;
@@ -356,7 +358,7 @@ int main()
 
             const int num_vel_subdivisions = 3;
 
-            const int num_recursions = 16;
+            const int num_recursions = 32;
 
             //const double target_distance = 10. * 1000 * 1000 * 1000;
 
@@ -388,7 +390,7 @@ int main()
             auto info = orbital_manager.bisect_with_cache(tnum, timestep, dt_s,
                                                0.1, 0.1, 2000.0,
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
-                                               num_vel_subdivisions, num_recursions, current_target.target_distance, probe, target);
+                                               num_vel_subdivisions, num_recursions, current_target.target_distance, max_error_distance, probe, target);
 
             printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
@@ -474,6 +476,7 @@ int main()
             {
                 ///split into calculate and apply so we can do everything atomically?
                 orbital_manager.tick(dt_s, dt_old);
+
 
                 ///we need to pick the correct retrograde
                 if(current_target.target != nullptr)
