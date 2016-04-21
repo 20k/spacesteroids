@@ -156,9 +156,12 @@ int main()
 
     //target_info current_target;
 
-    manoeuvre::manov current_manov;
+    //manoeuvre::manov current_manov;
 
-    current_manov.set_orbital(currently_in_control);
+    //current_manov.set_orbital(currently_in_control);
+
+    manoeuvre::manov_list current_mlist;
+    current_mlist.set_probe(currently_in_control);
 
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
@@ -306,6 +309,7 @@ int main()
 
         ///need to fiddle with constant acceleration rather than impulse
         ///although then again, do I?
+        #if 0
         if(once<sf::Mouse::Right>() && win.hasFocus())
         {
             /*orbital voyager_probe = *earth;
@@ -398,6 +402,7 @@ int main()
             ///must happen before tick
             current_manov.start_journey(orbital_manager, target, target, nullptr, earth);
         }
+        #endif
 
         /*if(once<sf::Mouse::Middle>())
         {
@@ -435,7 +440,13 @@ int main()
         }
         else
         {
-            orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
+            //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
+
+
+            orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+
+            target->transitory_draw_col = {1, 0, 0};
+
 
             float mod = 0.001f;
 
@@ -452,6 +463,20 @@ int main()
 
                 if(key.isKeyPressed(sf::Keyboard::Right))
                     currently_in_control->acc.v[0] = 1 * mod;
+
+                if(once<sf::Mouse::Right>())
+                {
+                    current_mlist.make_single_trip(target);
+
+                    //current_manov.start_journey(orbital_manager, target, target, nullptr, nullptr);
+                }
+
+                if(once<sf::Mouse::Middle>())
+                {
+                    current_mlist.make_return_trip(target, earth);
+
+                   //current_manov.start_journey(orbital_manager, target, nullptr, target, earth);
+                }
             }
 
             if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
@@ -472,7 +497,9 @@ int main()
             {
                 ///split into calculate and apply so we can do everything atomically?
 
-                current_manov.pre_mainstream_tick(orbital_manager);
+                //current_manov.pre_mainstream_tick(orbital_manager);
+
+                current_mlist.tick_pre(orbital_manager);
 
                 orbital_manager.tick(dt_s, dt_old);
 
@@ -502,8 +529,9 @@ int main()
                     }
                 }*/
 
-                current_manov.tick(orbital_manager, sun, dt_s);
+                //current_manov.tick(orbital_manager, sun, dt_s);
 
+                current_mlist.tick_post(orbital_manager, sun);
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
 

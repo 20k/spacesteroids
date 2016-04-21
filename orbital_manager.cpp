@@ -623,7 +623,7 @@ ret_info manager::bisect(int ticks, float dt_cur, float dt_old,
         return bisect(ticks, dt_cur, dt_old, base_speed, found_mod - step/2, found_mod + step/2, next_angle_offset, next_half_angle, next_angle_subdivisions, num_per_step, depth, test_orbital, target_orbital, info_to_retrieve, c+1);
     }
 
-    return {backup, saved_mtick};
+    return {backup, saved_mtick, min_min};
 }
 
 ///we need a -> clone
@@ -865,7 +865,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);
 
-    return {backup, saved_mtick};
+    return {backup, saved_mtick, min_min};
 }
 
 void manager::plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col)

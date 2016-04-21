@@ -10,6 +10,7 @@ struct ret_info
 {
     vector<vector<vec2d>> ret;
     int mtick;
+    double mdist;
 };
 
 extern double gravitational_constant;
