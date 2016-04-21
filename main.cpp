@@ -334,7 +334,11 @@ int main()
             current_target.target = target;
             current_target.me = currently_in_control;
 
-            current_target.target_distance = 1. * 1000 * 1000 * 1000;
+            ///still not working for small targets
+            ///its possible that its because we're slightly using the wrong equation
+            ///but it seems to be the sun thats fucking everything up
+            ///or it seems to be the tick in between
+            current_target.target_distance = 0;//1. * 1000 * 1000 * 1000;
 
             ///relative to velocity
             ///accurate settings
@@ -348,11 +352,11 @@ int main()
 
             const float angle_offset = 0.f;
             const float front_half_angle_cone = M_PI/2.f;
-            const float angle_subdivisions = 5;
+            const float angle_subdivisions = 10;
 
-            const int num_vel_subdivisions = 5;
+            const int num_vel_subdivisions = 10;
 
-            const int num_recursions = 6;
+            const int num_recursions = 8;
 
             //const double target_distance = 10. * 1000 * 1000 * 1000;
 
@@ -414,35 +418,6 @@ int main()
                 currently_in_control->old_pos = currently_in_control->old_pos - diff;
         }
 
-        ///we need to pick the correct retrograde
-        if(current_target.target != nullptr)
-        {
-            double diff = (currently_in_control->pos - current_target.target->pos).length();
-
-            if(diff < current_target.target_distance * 1.2)
-            {
-                double rad = diff;
-
-                double orbital_velocity = current_target.target->get_orbital_velocity(rad);
-
-                ///need to add orbital velocity of sun?
-
-                ///we need to get the current speed, not the mean orbital speed
-                //currently_in_control->orbit_speed(sun->get_orbital_velocity((currently_in_control->pos - sun->pos).length()), sun->pos);
-
-                //vec2d diff = currently_in_control->pos - currently_in_control->old_pos;
-
-                vec2d diff = current_target.target->pos - current_target.target->old_pos;
-
-                currently_in_control->orbit_speed(orbital_velocity, current_target.target->pos);
-
-                if(current_target.target != sun)
-                    currently_in_control->old_pos = currently_in_control->old_pos - diff;
-
-                current_target.target = nullptr;
-            }
-        }
-
         if(key.isKeyPressed(sf::Keyboard::Escape) && win.hasFocus())
             win.close();
 
@@ -496,6 +471,40 @@ int main()
             {
                 ///split into calculate and apply so we can do everything atomically?
                 orbital_manager.tick(dt_s, dt_old);
+
+
+                ///we need to pick the correct retrograde
+                if(current_target.target != nullptr)
+                {
+                    double diff = (currently_in_control->pos - current_target.target->pos).length();
+
+                    //if(diff < current_target.target_distance * 1.2)
+
+                    ///yup, this was the issue!
+                    if(diff < current_target.target->radius * 100)
+                    {
+                        double rad = diff;
+
+                        double orbital_velocity = current_target.target->get_orbital_velocity(rad);
+
+                        ///need to add orbital velocity of sun?
+
+                        ///we need to get the current speed, not the mean orbital speed
+                        //currently_in_control->orbit_speed(sun->get_orbital_velocity((currently_in_control->pos - sun->pos).length()), sun->pos);
+
+                        //vec2d diff = currently_in_control->pos - currently_in_control->old_pos;
+
+                        vec2d diff = current_target.target->pos - current_target.target->old_pos;
+
+                        currently_in_control->orbit_speed(orbital_velocity, current_target.target->pos);
+
+                        if(current_target.target != sun)
+                            currently_in_control->old_pos = currently_in_control->old_pos - diff;
+
+                        current_target.target = nullptr;
+                    }
+                }
+
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
 
