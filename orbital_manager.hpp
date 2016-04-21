@@ -174,6 +174,8 @@ std::vector<orbital*> populate_orbits_with_asteroids(orbital* o, orbital* parent
 
         ///v = sqrt G * mass / rad
 
+        ///44km avg
+
         orbital* norbit = new orbital(avg_mass, frad, vel);
 
         norbit->pos = global_pos;

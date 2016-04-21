@@ -154,7 +154,11 @@ int main()
 
     //orbital* target_to_circularise = nullptr;
 
-    target_info current_target;
+    //target_info current_target;
+
+    manoeuvre::manov current_manov;
+
+    current_manov.set_orbital(currently_in_control);
 
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
@@ -309,11 +313,9 @@ int main()
             voyager_probe.mass = 721.9;
             voyager_probe.col = {1, 0, 0};*/
 
+            #if 0
+
             orbital* probe = currently_in_control;
-
-
-            float base_speed = dt_s;
-
 
             sf::Clock clk;
 
@@ -364,8 +366,6 @@ int main()
 
             const int num_recursions = 20;
 
-            sf::Clock tclk;
-
             ///if mindist > 1
             ///redo after some amount of distance
 
@@ -380,15 +380,23 @@ int main()
                                                angle_offset, front_half_angle_cone, angle_subdivisions,
                                                num_vel_subdivisions, num_recursions, current_target.target_distance, max_error_distance, probe, target);
 
-            printf("Time taken %f\n", tclk.getElapsedTime().asMicroseconds() / 1000.f);
 
             //auto info = orbital_manager.bisect(tnum, timestep, dt_s, 10, 0.5, 10.0, 30, 4, &voyager_probe, uranus, {earth, sun, neptune, saturn, jupiter, mercury, venus, mars});
 
             printf("Time %f\n", clk.getElapsedTime().asMilliseconds() / 1000.f);;
 
-            printf("time course takes %f years\n", info.mtick * timestep / 60 / 60 / 24 / 365);
+            printf("time course takes %f years\n", info.mtick * dt_s / 60 / 60 / 24 / 365);
 
             system("pause");
+
+            #endif
+
+
+            orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            //target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+
+            ///must happen before tick
+            current_manov.start_journey(orbital_manager, target, target, nullptr, earth);
         }
 
         /*if(once<sf::Mouse::Middle>())
@@ -463,11 +471,14 @@ int main()
             if((key.isKeyPressed(sf::Keyboard::F) && win.hasFocus()) || toggled_going)
             {
                 ///split into calculate and apply so we can do everything atomically?
+
+                current_manov.pre_mainstream_tick(orbital_manager);
+
                 orbital_manager.tick(dt_s, dt_old);
 
 
                 ///we need to pick the correct retrograde
-                if(current_target.target != nullptr)
+                /*if(current_target.target != nullptr)
                 {
                     double diff = (currently_in_control->pos - current_target.target->pos).length();
 
@@ -489,7 +500,9 @@ int main()
 
                         current_target.target = nullptr;
                     }
-                }
+                }*/
+
+                current_manov.tick(orbital_manager, sun, dt_s);
 
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
