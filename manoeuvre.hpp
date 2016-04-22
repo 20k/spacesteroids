@@ -20,7 +20,8 @@ namespace manoeuvre
         ORBIT = 2 << 2,
         CAPTURE = 2 << 3,
         BE_NEAR = 2 << 4,
-        WAIT = 2 << 5
+        WAIT = 2 << 5,
+        UNCAPTURE = 2 << 6,
     };
 
     ///lets totally scrap the manov structure
@@ -118,40 +119,19 @@ namespace manoeuvre
                     fin = true;
             }
 
+            ///async tasks working badly
+            ///if a new intercept gets brought into the fold, it gets blocked
             if(does(CAPTURE))
             {
-                if(args.count("capture") == 0)
-                {
-                    args["capture"] = 1;
-
-                    //args["cdist"] = 0.1 * 1000 * 1000 * 1000;
-                    blocking = false;
-
-                    //double angle = (probe->pos - target->pos).angle();
-                    //double rad = (probe->pos - target->pos).length();
-
-                    //args["rad"] = rad;
-                    //args["angle"] = angle;
-                }
-
-                //double rad = 1. * 1000 * 1000 * 1000;//args["rad"];
-                //double angle = args["angle"];
-
+                blocking = false;
 
                 ///we need some way to uncapture
-                vec2d diff = probe->pos - probe->old_pos;
+                /*vec2d diff = probe->pos - probe->old_pos;
 
-                target->pos = target->old_pos + diff;
+                target->pos = target->old_pos + diff;*/
 
-
-                ///gets set to 0?
-                target->unconditional_acc += probe->unconditional_acc;
-
-                if(target->unconditional_acc.v[0] != 0 || target->unconditional_acc.v[1] != 0)
-                    printf("%f %f \n\n\n\n\n\n\n", target->unconditional_acc.v[0], target->unconditional_acc.v[1]);
-
-                //target->pos = probe->pos + (vec2d){0, 1}.rot(angle) * rad;
-                //target->old_pos = probe->old_pos + (vec2d){0, 1}.rot(angle) * rad;
+                target->pos = probe->pos;
+                target->old_pos = probe->old_pos;
             }
 
             return std::vector<manv>();
@@ -291,8 +271,8 @@ namespace manoeuvre
             manv bn(target, BE_NEAR);
             //manv mwait(target, ORBIT);
             //manv mdelay(target, WAIT);
-            manv m2(home, INTERCEPT);
             manv mcapture(target, CAPTURE);
+            manv m2(home, INTERCEPT);
             manv morb(home, ORBIT);
 
             //mdelay.set_arg("time", 1000 * dt_s);
@@ -301,8 +281,8 @@ namespace manoeuvre
             man_list.push_back(bn);
             //man_list.push_back(mwait);
             //man_list.push_back(mdelay);
-            man_list.push_back(m2);
             man_list.push_back(mcapture);
+            man_list.push_back(m2);
             man_list.push_back(morb);
         }
 

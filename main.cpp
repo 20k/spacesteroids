@@ -443,8 +443,8 @@ int main()
             //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
 
-            orbital* target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
-            //orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            //orbital* target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
 
             target->transitory_draw_col = {1, 0, 0};
 
@@ -470,27 +470,25 @@ int main()
                     current_mlist.uncapture();
                 }
 
-
-
                 if(once<sf::Mouse::Right>())
                 {
-                    current_mlist.make_single_trip(target);
+                    current_mlist.man_list.clear();
 
-                    //current_manov.start_journey(orbital_manager, target, target, nullptr, nullptr);
+                    current_mlist.make_single_trip(target);
                 }
 
                 if(once<sf::Mouse::Middle>())
                 {
-                    current_mlist.make_return_trip(target, earth);
+                    current_mlist.man_list.clear();
 
-                   //current_manov.start_journey(orbital_manager, target, nullptr, target, earth);
+                    current_mlist.make_return_trip(target, earth);
                 }
 
                 ///will not work on planets
-                if(once<sf::Mouse::Left>())
+                /*if(once<sf::Mouse::Left>())
                 {
                     current_mlist.make_return_capture(target, earth);
-                }
+                }*/
             }
 
             if(key.isKeyPressed(sf::Keyboard::G) && key.isKeyPressed(sf::Keyboard::F) && win.hasFocus())
@@ -510,9 +508,6 @@ int main()
             if((key.isKeyPressed(sf::Keyboard::F) && win.hasFocus()) || toggled_going)
             {
                 ///split into calculate and apply so we can do everything atomically?
-
-                //current_manov.pre_mainstream_tick(orbital_manager);
-
                 current_mlist.tick_pre(orbital_manager);
 
                 orbital_manager.tick(dt_s, dt_old);
@@ -542,8 +537,6 @@ int main()
                         current_target.target = nullptr;
                     }
                 }*/
-
-                //current_manov.tick(orbital_manager, sun, dt_s);
 
                 current_mlist.tick_post(orbital_manager, sun);
 

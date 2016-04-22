@@ -92,6 +92,12 @@ void manager::tick(float dt_cur, float dt_old)
 ///which is what is leading to these drastic accelerations
 ///could clamp to some reasonable orbital distance, but even then
 ///tick needs to return a new dt
+///we need to improve absorption
+///id like to be able to dump asteroids into earth
+
+///if we gradually increase the dt from dt_s -> dt_s * 2, we can remove the inaccuracy
+///while drastically speed up computation
+
 void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes, bool absorption)
 {
     int osize = olist.size();
@@ -126,14 +132,14 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
             }
             else
             {
-                if(r12l < o1->radius * 4.)
+                /*if(r12l < o1->radius * 4.)
                 {
                     o2->skip = true;
 
                     continue;
-                }
+                }*/
 
-                /*vec2d line_to_hit = point2line_shortest(o2->pos, o2->pos - o2->old_pos, o1->pos);
+                vec2d line_to_hit = point2line_shortest(o2->pos, o2->pos - o2->old_pos, o1->pos);
 
                 vec2d line_point = line_to_hit + o1->pos;
 
@@ -152,7 +158,7 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
                 {
                     o2->skip = true;
                     continue;
-                }*/
+                }
             }
 
             double NFac = G / (r12l * r12l);
@@ -420,15 +426,6 @@ vector<vector<vec2d>> manager::test(int ticks, float dt_cur, float dt_old, sf::R
 ///return min dist and tick instead
 void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double target_distance, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache)
 {
-    /*vector<vector<vec2d>> test_ret;
-
-    test_ret.resize(info_to_retrieve.size() + 1);
-
-    for(auto& i : test_ret)
-    {
-        i.reserve(ticks);
-    }*/
-
     const bool weight = true;
 
     auto backup = make_backup();
@@ -436,6 +433,11 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
     std::vector<orbital*> to_insert = to_insert_into_stream;
 
     to_insert.push_back(test_orbital);
+
+    const float dt_max = dt_cur;
+    const float dt_min = dt_cur;
+
+    int tick_max_size = cache.size();
 
     int mtick = -1;
     double mdist = DBL_MAX;
@@ -458,10 +460,7 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
             o1->pos = cache[i+1][j];
         }
 
-        if(i == 0)
-            tick_only_probes(dt_cur, dt_old, to_insert);
-        else
-            tick_only_probes(dt_cur, dt_cur, to_insert);
+        tick_only_probes(dt_cur, dt_old, to_insert);
 
         double len = (test_orbital->pos - target_orbital->pos).length();
 
@@ -471,12 +470,8 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
             mtick = i;
         }
 
-        /*test_ret[0].push_back(test_orbital->pos);
-
-        for(int k=0; k<info_to_retrieve.size(); k++)
-        {
-            test_ret[k+1].push_back(info_to_retrieve[k]->pos);
-        }*/
+        dt_old = dt_cur;
+        dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_max_size;
     }
 
     restore_from_backup(backup);
@@ -645,6 +640,10 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
         i.reserve(orbital_manager.olist.size());
     }
 
+    const float dt_max = dt_cur;
+    const float dt_min = dt_cur;
+
+
     for(int i=0; i<tick_num; i++)
     {
         std::vector<vec2d>& this_tick_cache = object_cache[i];
@@ -656,10 +655,11 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
             this_tick_cache.push_back(j->pos);
         }
 
-        if(i == 0)
-            orbital_manager.tick(dt_cur, dt_old);
-        else
-            orbital_manager.tick(dt_cur, dt_cur);
+
+        orbital_manager.tick(dt_cur, dt_old);
+
+        dt_old = dt_cur;
+        dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_num;
     }
 
     for(int i=0; i<old_orbitals.size(); i++)
@@ -736,7 +736,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         this_ticks = last_found_minimum_tick + tick_extension;
 
-        //printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
+        printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
 
         this_ticks = min(this_ticks, tick_differential_extension);
 
