@@ -443,7 +443,8 @@ int main()
             //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
 
-            orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            orbital* target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            //orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
 
             target->transitory_draw_col = {1, 0, 0};
 
@@ -464,6 +465,13 @@ int main()
                 if(key.isKeyPressed(sf::Keyboard::Right))
                     currently_in_control->acc.v[0] = 1 * mod;
 
+                if(once<sf::Keyboard::C>())
+                {
+                    current_mlist.uncapture();
+                }
+
+
+
                 if(once<sf::Mouse::Right>())
                 {
                     current_mlist.make_single_trip(target);
@@ -476,6 +484,12 @@ int main()
                     current_mlist.make_return_trip(target, earth);
 
                    //current_manov.start_journey(orbital_manager, target, nullptr, target, earth);
+                }
+
+                ///will not work on planets
+                if(once<sf::Mouse::Left>())
+                {
+                    current_mlist.make_return_capture(target, earth);
                 }
             }
 

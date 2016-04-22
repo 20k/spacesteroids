@@ -712,7 +712,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         int atick_diff = fabs(tick_differential);
 
-        printf("T1 %i\n", atick_diff);
+        //printf("T1 %i\n", atick_diff);
 
         int sampled_minimum = last_found_minimum_tick;
 
@@ -736,7 +736,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         this_ticks = last_found_minimum_tick + tick_extension;
 
-        printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
+        //printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
 
         this_ticks = min(this_ticks, tick_differential_extension);
 

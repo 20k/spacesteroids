@@ -35,6 +35,8 @@ namespace manoeuvre
 
         orbital* target = nullptr;
 
+        bool blocking = true;
+
         std::map<std::string, double> args;
 
         manv(orbital* _target, manov_type _type)
@@ -85,7 +87,7 @@ namespace manoeuvre
                 int tick = info.mtick;
 
                 ///readjust at the halfway point
-                double mtime = tick * dt_s / 10;
+                double mtime = 100 + tick * dt_s / 10;
 
                 if(dist > max_error_distance)
                 {
@@ -102,7 +104,7 @@ namespace manoeuvre
             {
                 double diff = (target->pos - probe->pos).length();
 
-                if(diff < 0.1 * 1000 * 1000 * 1000)
+                if(diff < 0.4 * 1000 * 1000 * 1000)
                 {
                     fin = true;
                 }
@@ -114,6 +116,42 @@ namespace manoeuvre
 
                 if(time_elapsed >= args["time"])
                     fin = true;
+            }
+
+            if(does(CAPTURE))
+            {
+                if(args.count("capture") == 0)
+                {
+                    args["capture"] = 1;
+
+                    //args["cdist"] = 0.1 * 1000 * 1000 * 1000;
+                    blocking = false;
+
+                    //double angle = (probe->pos - target->pos).angle();
+                    //double rad = (probe->pos - target->pos).length();
+
+                    //args["rad"] = rad;
+                    //args["angle"] = angle;
+                }
+
+                //double rad = 1. * 1000 * 1000 * 1000;//args["rad"];
+                //double angle = args["angle"];
+
+
+                ///we need some way to uncapture
+                vec2d diff = probe->pos - probe->old_pos;
+
+                target->pos = target->old_pos + diff;
+
+
+                ///gets set to 0?
+                target->unconditional_acc += probe->unconditional_acc;
+
+                if(target->unconditional_acc.v[0] != 0 || target->unconditional_acc.v[1] != 0)
+                    printf("%f %f \n\n\n\n\n\n\n", target->unconditional_acc.v[0], target->unconditional_acc.v[1]);
+
+                //target->pos = probe->pos + (vec2d){0, 1}.rot(angle) * rad;
+                //target->old_pos = probe->old_pos + (vec2d){0, 1}.rot(angle) * rad;
             }
 
             return std::vector<manv>();
@@ -159,6 +197,11 @@ namespace manoeuvre
         {
             return fin;
         }
+
+        bool blocks()
+        {
+            return blocking;
+        }
     };
 
     struct manov_list
@@ -178,7 +221,6 @@ namespace manoeuvre
             {
                 auto add = man_list[i].tick_pre(orbital_manager, parent, dt_s);
 
-                //for(auto& j : add)
                 for(int j=0; j<add.size(); j++)
                     man_list.insert(man_list.begin() + i + 1 + j, add[j]);
 
@@ -186,9 +228,12 @@ namespace manoeuvre
                 {
                     man_list.erase(man_list.begin() + i);
                     i--;
+
+                    continue;
                 }
 
-                return;
+                if(man_list[i].blocks())
+                    return;
             }
         }
 
@@ -198,16 +243,19 @@ namespace manoeuvre
             {
                 auto add = man_list[i].tick_post(orbital_manager, parent, sun, dt_s);
 
-                for(auto& j : add)
-                    man_list.insert(man_list.begin() + i + 1, j);
+                for(int j=0; j<add.size(); j++)
+                    man_list.insert(man_list.begin() + i + 1 + j, add[j]);
 
                 if(man_list[i].complete())
                 {
                     man_list.erase(man_list.begin() + i);
                     i--;
+
+                    continue;
                 }
 
-                return;
+                if(man_list[i].blocks())
+                    return;
             }
         }
 
@@ -235,6 +283,39 @@ namespace manoeuvre
 
             man_list.push_back(m1);
             man_list.push_back(mwait);
+        }
+
+        void make_return_capture(orbital* target, orbital* home)
+        {
+            manv m1(target, INTERCEPT);
+            manv bn(target, BE_NEAR);
+            //manv mwait(target, ORBIT);
+            //manv mdelay(target, WAIT);
+            manv m2(home, INTERCEPT);
+            manv mcapture(target, CAPTURE);
+            manv morb(home, ORBIT);
+
+            //mdelay.set_arg("time", 1000 * dt_s);
+
+            man_list.push_back(m1);
+            man_list.push_back(bn);
+            //man_list.push_back(mwait);
+            //man_list.push_back(mdelay);
+            man_list.push_back(m2);
+            man_list.push_back(mcapture);
+            man_list.push_back(morb);
+        }
+
+        void uncapture()
+        {
+            for(int i=0; i<man_list.size(); i++)
+            {
+                if(man_list[i].does(CAPTURE))
+                {
+                    man_list.erase(man_list.begin() + i);
+                    i--;
+                }
+            }
         }
     };
 
