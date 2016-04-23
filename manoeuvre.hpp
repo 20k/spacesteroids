@@ -75,7 +75,7 @@ namespace manoeuvre
                 auto info = orbital_manager.bisect_with_cache(100000, dt_s, dt_s,
                                                               0.1, 0.1, 2000.0,
                                                               0., M_PI/2., 3,
-                                                              3, 20, 0., max_error_distance, probe, target);
+                                                              3, 16, 0., max_error_distance, probe, target);
 
                 printf("Time elapsed %f\n", clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
 
@@ -132,6 +132,11 @@ namespace manoeuvre
 
                 target->pos = probe->pos;
                 target->old_pos = probe->old_pos;
+            }
+
+            if(does(UNCAPTURE))
+            {
+                fin = true;
             }
 
             return std::vector<manv>();
@@ -204,6 +209,12 @@ namespace manoeuvre
                 for(int j=0; j<add.size(); j++)
                     man_list.insert(man_list.begin() + i + 1 + j, add[j]);
 
+                if(man_list[i].does(UNCAPTURE))
+                {
+                    uncapture();
+                    i--;
+                }
+
                 if(man_list[i].complete())
                 {
                     man_list.erase(man_list.begin() + i);
@@ -225,6 +236,13 @@ namespace manoeuvre
 
                 for(int j=0; j<add.size(); j++)
                     man_list.insert(man_list.begin() + i + 1 + j, add[j]);
+
+                ///if we uncapture, itll break
+                if(man_list[i].does(UNCAPTURE))
+                {
+                    uncapture();
+                    i--; ///assumes a correct stack
+                }
 
                 if(man_list[i].complete())
                 {
@@ -286,6 +304,31 @@ namespace manoeuvre
             man_list.push_back(morb);
         }
 
+        void capture_and_ditch(orbital* target, orbital* ditch_into)
+        {
+            manv m1(target, INTERCEPT);
+            manv m2(target, BE_NEAR);
+
+            manv mcapture(target, CAPTURE);
+
+            manv md(ditch_into, INTERCEPT);
+            manv mw(ditch_into, WAIT);
+            manv ditch(ditch_into, UNCAPTURE);
+            manv morb(ditch_into, ORBIT);
+
+            mw.set_arg("time", 10 * dt_s);
+
+            man_list.push_back(m1);
+            man_list.push_back(m2);
+
+            man_list.push_back(mcapture);
+
+            man_list.push_back(md);
+            man_list.push_back(mw);
+            man_list.push_back(ditch);
+            man_list.push_back(morb);
+        }
+
         void uncapture()
         {
             for(int i=0; i<man_list.size(); i++)
@@ -294,11 +337,13 @@ namespace manoeuvre
                 {
                     man_list.erase(man_list.begin() + i);
                     i--;
+                    return;
                 }
             }
         }
     };
 
+    #if 0
     struct manov
     {
         manov_type type = NONE;
@@ -427,6 +472,7 @@ namespace manoeuvre
             update_child();
         }
     };
+    #endif
 
     //static manov_t asteroid_capture = (manov_t)(INTERCEPT | ORBIT | CAPTURE | RETURN);
     //static manov_t orbital_intercept = (manov_t)(INTERCEPT | ORBIT);

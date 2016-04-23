@@ -41,8 +41,6 @@ void manager::tick(float dt_cur, float dt_old)
 
             ///0.0000000000674
 
-            double G = 0.0000000000674;
-
             vec2d r12 = (o2->pos - o1->pos);
 
             double r12l = r12.length();
@@ -56,7 +54,7 @@ void manager::tick(float dt_cur, float dt_old)
             if(r12l < rad)
                 r12l = rad;
 
-            double NFac = G / (r12l * r12l);
+            double NFac = gravitational_constant / (r12l * r12l);
 
             ///so its own mass cancels out in the change in velocity calvulations
 
@@ -98,6 +96,8 @@ void manager::tick(float dt_cur, float dt_old)
 ///if we gradually increase the dt from dt_s -> dt_s * 2, we can remove the inaccuracy
 ///while drastically speed up computation
 
+///accuracy when we hit the center of something is less important in the tick_only_probe function
+
 void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orbital*>& probes, bool absorption)
 {
     int osize = olist.size();
@@ -115,8 +115,6 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
             if(o2->skip)
                 continue;
 
-            double G = 0.0000000000674;
-
             vec2d r12 = (o2->pos - o1->pos);
 
             double r12l = r12.length();
@@ -125,6 +123,7 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
             ///???
             ///radius of jupiter
+
             if(!absorption)
             {
                 if(r12l < 69911 * pow(10, 3))
@@ -161,7 +160,8 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
                 }
             }
 
-            double NFac = G / (r12l * r12l);
+            ///eliminating the norm/min/etc would be a lot faster
+            double NFac = gravitational_constant / (r12l * r12l);
 
             ///so its own mass cancels out in the change in velocity calvulations
 
@@ -428,14 +428,12 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
 {
     const bool weight = true;
 
-    auto backup = make_backup();
-
     std::vector<orbital*> to_insert = to_insert_into_stream;
 
     to_insert.push_back(test_orbital);
 
-    const float dt_max = dt_cur;
-    const float dt_min = dt_cur;
+    //const float dt_max = dt_cur;
+    //const float dt_min = dt_cur;
 
     int tick_max_size = cache.size();
 
@@ -471,10 +469,8 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         }
 
         dt_old = dt_cur;
-        dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_max_size;
+        //dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_max_size;
     }
-
-    restore_from_backup(backup);
 
     ///we're forgetting to reset pos and old_pos
     ///that is the issue
@@ -640,8 +636,8 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
         i.reserve(orbital_manager.olist.size());
     }
 
-    const float dt_max = dt_cur;
-    const float dt_min = dt_cur;
+    //const float dt_max = dt_cur;
+    //const float dt_min = dt_cur;
 
 
     for(int i=0; i<tick_num; i++)
@@ -659,7 +655,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
         orbital_manager.tick(dt_cur, dt_old);
 
         dt_old = dt_cur;
-        dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_num;
+        //dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_num;
     }
 
     for(int i=0; i<old_orbitals.size(); i++)
@@ -671,6 +667,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
 }
 
 ///we dont need any info to retrieve
+///maybe I should start with a really low tick, and allow it to grow up to _max
 ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float base_speed, float minimum, float maximum,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,
@@ -736,7 +733,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         this_ticks = last_found_minimum_tick + tick_extension;
 
-        printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
+        //printf("%i found tick, allowed max tick %i, tick_differential %i\n", last_found_minimum_tick, last_found_minimum_tick + tick_extension, tick_differential_extension);
 
         this_ticks = min(this_ticks, tick_differential_extension);
 
@@ -854,9 +851,9 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     ///wtf, found mod is a dividor, not a multiplier
     ///higher mod = slower speed
     ///?????
-    printf("found_acc %f\n", found_mod);
+    //printf("found_acc %f\n", found_mod);
     printf("found mindist %f\n", min_min / 1000 / 1000 / 1000);
-    printf("found angle %f\n", next_angle_offset);
+    //printf("found angle %f\n", next_angle_offset);
 
     if(c+1 < depth && min_min >= max_error_distance)
     {
