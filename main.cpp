@@ -78,7 +78,7 @@ bool once()
 int main()
 {
     sf::ContextSettings settings;
-    settings.antialiasingLevel = 2;
+    settings.antialiasingLevel = 4;
 
     sf::RenderWindow win;
     win.create(sf::VideoMode(1200, 800), "hi", sf::Style::Default, settings);
@@ -165,6 +165,8 @@ int main()
 
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
+
+    vec3f highlight_col = {1, 0.0, 1};
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
     #ifdef VERIFICATION_SATURN_V
@@ -446,7 +448,7 @@ int main()
             //orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
             orbital* target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
 
-            target->transitory_draw_col = {1, 0, 0};
+            target->transitory_draw_col = highlight_col;
 
 
             float mod = 0.001f;
@@ -488,7 +490,8 @@ int main()
                 {
                     current_mlist.man_list.clear();
 
-                    current_mlist.capture_and_ditch(target, jupiter);
+                    current_mlist.capture_and_ditch(target, sun);
+                    current_mlist.make_single_trip(earth);
                 }
 
                 ///will not work on planets
@@ -575,6 +578,10 @@ int main()
 
 
             orbital_manager.draw_bulk(asteroids, win, 1);
+
+            target->transitory_draw_col = highlight_col;
+
+            orbital_manager.draw_bulk({target}, win, 2);
             orbital_manager.draw_bulk(player_satellites, win, 2);
 
             orbital_manager.display(win);

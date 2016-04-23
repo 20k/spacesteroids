@@ -668,6 +668,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
 
 ///we dont need any info to retrieve
 ///maybe I should start with a really low tick, and allow it to grow up to _max
+///if we enable probe absorption, itll probably fix a few issues
 ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                          float base_speed, float minimum, float maximum,
                          float angle_offset, float half_angle_cone, float angle_subdivisions,

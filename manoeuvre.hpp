@@ -314,7 +314,7 @@ namespace manoeuvre
             manv md(ditch_into, INTERCEPT);
             manv mw(ditch_into, WAIT);
             manv ditch(ditch_into, UNCAPTURE);
-            manv morb(ditch_into, ORBIT);
+            //manv morb(ditch_into, ORBIT);
 
             mw.set_arg("time", 10 * dt_s);
 
@@ -326,7 +326,7 @@ namespace manoeuvre
             man_list.push_back(md);
             man_list.push_back(mw);
             man_list.push_back(ditch);
-            man_list.push_back(morb);
+            //man_list.push_back(morb);
         }
 
         void uncapture()
