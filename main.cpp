@@ -595,7 +595,6 @@ int main()
             if(target && target == nhostile)
                 target->transitory_draw_col = hostile_highlight;
 
-            //target->transitory_draw_col = highlight_col;
 
             orbital_manager.draw_bulk({target}, win, 2);
 
@@ -607,7 +606,6 @@ int main()
                 orbital_manager.plot_orbit(currently_in_control, 1000, win);
 
             //    orbital_manager.plot_orbit(voyager_base, 1000, win);
-
 
             win.display();
             win.clear(sf::Color(0,0,0));
