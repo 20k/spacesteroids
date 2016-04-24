@@ -58,6 +58,10 @@ void manager::tick(float dt_cur, float dt_old)
 
             ///so its own mass cancels out in the change in velocity calvulations
 
+            ///we can factor out the multiplication by the gravitational constant
+            ///and put that below
+            ///probably wont make all too much difference
+            ///might improve accuracy a bit
             vec2d aF12 = ( o2->mass * NFac) * r12N;
             vec2d bF12 = (-o1->mass * NFac) * r12N;
 
@@ -1020,6 +1024,9 @@ orbital* manager::get_nearest(const std::vector<orbital*>& orbitals, vec2d mouse
 
     for(auto& i : orbitals)
     {
+        if(!i)
+            continue;
+
         if(i->skip)
             continue;
 

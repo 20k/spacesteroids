@@ -11,6 +11,8 @@ using namespace std;
 
 #include "manoeuvre.hpp"
 
+#include "game_manager.hpp"
+
 
 ///has the button been pressed once, and only once
 template<sf::Keyboard::Key k>
@@ -166,7 +168,10 @@ int main()
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
 
-    vec3f highlight_col = {1, 0.0, 1};
+    vec3f highlight_col = {1, 0, 1};
+    vec3f hostile_highlight = {0, 1, 1};
+
+    game_manager game_state;
 
     ///lets keep this purely for fluff reasons. The materials we use will rock
     #ifdef VERIFICATION_SATURN_V
@@ -446,10 +451,10 @@ int main()
 
 
             //orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
-            orbital* target = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            orbital* nhostile = orbital_manager.get_nearest(game_state.olist, m, wh*2.);
 
-            target->transitory_draw_col = highlight_col;
-
+            orbital* target = orbital_manager.get_nearest({ntarget, nhostile}, m, wh * 2.);
 
             float mod = 0.001f;
 
@@ -492,6 +497,11 @@ int main()
 
                     current_mlist.capture_and_ditch(target, sun);
                     current_mlist.make_single_trip(earth);
+                }
+
+                if(once<sf::Keyboard::Tab>())
+                {
+                    game_state.spawn_hostile_asteroid(earth, sun);
                 }
 
                 ///will not work on planets
@@ -551,7 +561,7 @@ int main()
                 current_mlist.tick_post(orbital_manager, sun);
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
-
+                orbital_manager.tick_only_probes(dt_s, dt_old, game_state.olist, true);
                 orbital_manager.tick_only_probes(dt_s, dt_old, player_satellites, false);
 
                 day += (dt_s / 60) / 60 / 24;
@@ -578,10 +588,17 @@ int main()
 
 
             orbital_manager.draw_bulk(asteroids, win, 1);
+            orbital_manager.draw_bulk(game_state.olist, win, 1.5);
 
-            target->transitory_draw_col = highlight_col;
+            if(target && target == ntarget)
+                target->transitory_draw_col = highlight_col;
+            if(target && target == nhostile)
+                target->transitory_draw_col = hostile_highlight;
+
+            //target->transitory_draw_col = highlight_col;
 
             orbital_manager.draw_bulk({target}, win, 2);
+
             orbital_manager.draw_bulk(player_satellites, win, 2);
 
             orbital_manager.display(win);
