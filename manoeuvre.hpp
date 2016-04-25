@@ -5,6 +5,7 @@
 
 #include <map>
 
+///consider increasing dt_s
 extern double dt_s;
 
 struct manager;

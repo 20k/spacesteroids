@@ -21,7 +21,32 @@
 				<Option type="1" />
 				<Option compiler="mingw64" />
 				<Compiler>
+					<Add option="-march=native" />
+					<Add option="-msse" />
+					<Add option="-msse2" />
+					<Add option="-msse3" />
+					<Add option="-ftree-vectorize" />
+					<Add option="-m3dnow" />
+					<Add option="-mavx" />
+					<Add option="-msse2avx" />
+					<Add option="-maccumulate-outgoing-args" />
+					<Add option="-flto" />
+					<Add option="-Ofast" />
+					<Add option="-msse4.2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-flto" />
+				</Linker>
+			</Target>
+			<Target title="Profile">
+				<Option output="bin/Release/orbital" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="mingw64" />
+				<Compiler>
 					<Add option="-O2" />
+					<Add option="-pg" />
 					<Add option="-march=native" />
 					<Add option="-msse" />
 					<Add option="-msse2" />
@@ -33,9 +58,11 @@
 					<Add option="-msse2avx" />
 					<Add option="-Ofast" />
 					<Add option="-maccumulate-outgoing-args" />
+					<Add option="-flto" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
+					<Add option="-pg -lgmon" />
+					<Add option="-flto" />
 				</Linker>
 			</Target>
 		</Build>
@@ -45,13 +72,19 @@
 			<Add option="-std=gnu++14" />
 			<Add option="-Wno-sign-compare" />
 			<Add option="-Wno-unused-variable" />
+			<Add option="-fopenmp" />
 		</Compiler>
 		<Linker>
 			<Add option="-lsfml-graphics" />
 			<Add option="-lsfml-window" />
 			<Add option="-lsfml-system" />
+			<Add option="-fopenmp" />
 		</Linker>
+		<Unit filename="game_manager.cpp" />
+		<Unit filename="game_manager.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="manoeuvre.cpp" />
+		<Unit filename="manoeuvre.hpp" />
 		<Unit filename="orbital.cpp" />
 		<Unit filename="orbital.hpp" />
 		<Unit filename="orbital_manager.cpp" />

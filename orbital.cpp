@@ -1,5 +1,6 @@
 #include "orbital.hpp"
 
+///increase? Would lessen load on path finding components
 double dt_s = 12000 / 1;
 double dt_old = dt_s;
 

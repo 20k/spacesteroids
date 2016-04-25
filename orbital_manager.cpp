@@ -780,6 +780,10 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     vector<vector<vec2d>> backup;
 
+    sf::Clock c0clock;
+
+    ///do intra stage tick reduction for c == 0 && c == 1
+    ///I suspect these are a big reason for slowness
     for(int j=0; j<(int)angle_subdivisions; j++)
     {
         float frac = (float)j/angle_subdivisions;
@@ -849,6 +853,15 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
                 next_angle_offset = real_offset;
             }
         }
+    }
+
+    ///c0 and c1 comprise a huge amount of clock time
+    ///intra stage opt
+    ///more aggressive downticking from c0 -> c1?
+    ///we also need terminate early if x ticks fail to optimise (probably 3, with <5% mindist deviation)
+    //if(c <= 1)
+    {
+        printf("C0clk %f\n", c0clock.getElapsedTime().asMicroseconds()/1000.f);
     }
 
     next_half_angle = next_half_angle / angle_subdivisions;

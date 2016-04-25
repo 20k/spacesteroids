@@ -450,7 +450,7 @@ int main()
             //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
 
-            //orbital* target = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            //orbital* ntarget = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
             orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             orbital* nhostile = orbital_manager.get_nearest(game_state.olist, m, wh*2.);
 
