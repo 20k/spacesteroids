@@ -2,8 +2,11 @@
 #define MANOEUVRE_HPP_INCLUDED
 
 #include "orbital.hpp"
+#include "orbital_manager.hpp"
 
 #include <map>
+#include <future>
+#include <thread>
 
 ///consider increasing dt_s
 extern double dt_s;
@@ -23,12 +26,15 @@ namespace manoeuvre
         BE_NEAR = 2 << 4,
         WAIT = 2 << 5,
         UNCAPTURE = 2 << 6,
+        THREAD_WAITER = 2 << 7,
     };
 
     ///lets totally scrap the manov structure
 
     struct manv
     {
+        std::shared_ptr<std::future<void>> intercept_future;
+
         double time_elapsed = 0;
 
         bool fin = false;

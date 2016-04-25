@@ -9,8 +9,10 @@ using namespace std;
 struct ret_info
 {
     vector<vector<vec2d>> ret;
-    int mtick;
-    double mdist;
+    int mtick = 0;
+    double mdist = 0;
+    double found_speed = 0;
+    double next_angle_offset = 0;
 };
 
 extern double gravitational_constant;
@@ -117,6 +119,23 @@ struct manager
 
     std::vector<int> can_skip_for_optimisation;*/
 };
+
+struct arg_s
+{
+    int ticks; manager* orbital_manager; float offset; double error_dist; orbital* probe; orbital* target; ret_info* inf;
+};
+
+void bisect_wrapper(arg_s arg);
+
+inline void test_f(arg_s arg)
+{
+    *arg.inf = ret_info();
+}
+
+inline void test_v(ret_info* ret)
+{
+    *ret = ret_info();
+}
 
 ///real asteroid belt mass 3.00E+21 kg
 ///avg mass = 0.05% * that

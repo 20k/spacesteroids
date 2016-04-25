@@ -669,6 +669,9 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
     return object_cache;
 }
 
+///if we do threaded, we need to be passed cloned data
+///we can do manager->clone(), and test->clone(), and then work out target somehow?
+///go with the clone, delay into the future, then thread, then join on expected sync tick
 ///we dont need any info to retrieve
 ///maybe I should start with a really low tick, and allow it to grow up to _max
 ///if we enable probe absorption, itll probably fix a few issues
@@ -879,8 +882,27 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
     test_orbital->accelerate_relative_to_velocity(found_speed, next_angle_offset, 1200);
 
-    return {backup, saved_mtick, min_min};
+    return {backup, saved_mtick, min_min, found_speed, next_angle_offset};
 }
+
+
+///remember we need to clone shit or itll break
+void bisect_wrapper(arg_s arg)
+{
+    //return {};
+
+    printf("hello\n");
+
+    printf("%f %f  n %f %f\n", EXPAND_2(arg.probe->pos), EXPAND_2(arg.target->pos));
+
+    ret_info info = arg.orbital_manager->bisect_with_cache(arg.ticks, dt_s, dt_s,
+                    0.1, 0.1, 2000.0,
+                    arg.offset, M_PI/2., 3,
+                    3, 16, 0., arg.error_dist, arg.probe, arg.target);
+
+    *arg.inf = info;
+}
+
 
 void manager::plot(const vector<vector<vec2d>>& elements, int which_element, int which_tick, sf::RenderWindow& win, vec3f col)
 {
