@@ -108,6 +108,14 @@ struct manager
     std::vector<orbital> make_backup();
 
     manager* clone();
+
+    /*void set_unimportant_planet_skip(const std::vector<int>& skippable_ids);
+
+    ///we have except, because its convenient if we have a target
+    void skip_skippable(orbital* base, orbital* except);
+    void unskip_skippable();
+
+    std::vector<int> can_skip_for_optimisation;*/
 };
 
 ///real asteroid belt mass 3.00E+21 kg

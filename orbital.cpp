@@ -3,6 +3,9 @@
 ///increase? Would lessen load on path finding components
 double dt_s = 12000 / 1;
 double dt_old = dt_s;
+///10x earth
+double jupiter_radius = 69911 * pow(10, 3);
+double earth_sun_dist = 147.09 * pow(10, 9);
 
 void orbital::orbit_speed(double speed, vec2d parent)
 {

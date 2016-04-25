@@ -11,6 +11,8 @@ typedef vec<2, double> vec2d;
 extern double dt_s;
 extern double dt_old;
 extern double gravitational_constant;
+extern double jupiter_radius;
+extern double earth_sun_dist;
 
 struct orbital
 {

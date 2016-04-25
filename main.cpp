@@ -105,6 +105,8 @@ int main()
 
     std::cout << "pos " << earth->pos <<  " opos " << earth->old_pos << std::endl;
 
+    ///we could and should totally ignore mercury venus mars and pluto from all gravity calculations, unless they are the target
+
     orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 46. * pow(10, 9), 58.98 * pow(10, 3), 2440 * pow(10, 3)));
     //orbital* mercury = orbital_manager.make_new(orbital(3.3 * pow(10, 23), 57.9 * pow(10, 9), 47. * pow(10, 3), 2440 * pow(10, 3)));
 
@@ -144,6 +146,11 @@ int main()
     voyager_base->col = {1, 0, 0};
 
     std::vector<orbital**> mainstream_orbitals = {&sun, &earth, &mercury, &venus, &mars, &jupiter, &saturn, &uranus, &neptune, &pluto};
+
+    ///small reduction in accuracy for probably quite a large speed boost
+    ///earth, mercury venus mars, and pluto, the dwarf planet. Sorry pluto
+    ///could probably build this list automatically, if mass < 10^25
+    //orbital_manager.set_unimportant_planet_skip({1, 2, 3, 4, 9});
 
     std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
 
@@ -450,8 +457,8 @@ int main()
             //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
 
-            //orbital* ntarget = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
-            orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            orbital* ntarget = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            //orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             orbital* nhostile = orbital_manager.get_nearest(game_state.olist, m, wh*2.);
 
             orbital* target = orbital_manager.get_nearest({ntarget, nhostile}, m, wh * 2.);
@@ -495,7 +502,7 @@ int main()
                 {
                     current_mlist.man_list.clear();
 
-                    current_mlist.capture_and_ditch(target, sun);
+                    current_mlist.capture_and_ditch(target, jupiter);
                     current_mlist.make_single_trip(earth);
                 }
 
@@ -590,17 +597,17 @@ int main()
             orbital_manager.draw_bulk(asteroids, win, 1);
             orbital_manager.draw_bulk(game_state.olist, win, 1.5);
 
+            orbital_manager.draw_bulk(player_satellites, win, 2);
+
+            orbital_manager.display(win);
+
             if(target && target == ntarget)
                 target->transitory_draw_col = highlight_col;
             if(target && target == nhostile)
                 target->transitory_draw_col = hostile_highlight;
 
-
             orbital_manager.draw_bulk({target}, win, 2);
 
-            orbital_manager.draw_bulk(player_satellites, win, 2);
-
-            orbital_manager.display(win);
 
             if(key.isKeyPressed(sf::Keyboard::F))
                 orbital_manager.plot_orbit(currently_in_control, 1000, win);

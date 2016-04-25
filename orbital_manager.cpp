@@ -655,7 +655,6 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
             this_tick_cache.push_back(j->pos);
         }
 
-
         orbital_manager.tick(dt_cur, dt_old);
 
         dt_old = dt_cur;
@@ -1097,3 +1096,60 @@ manager* manager::clone()
 
     return nmanager;
 }
+
+/*void manager::set_unimportant_planet_skip(const std::vector<int>& skippable_ids)
+{
+    can_skip_for_optimisation = skippable_ids;
+}*/
+
+/*
+///eh, will break if any major orbitals are set to skip
+///we need to take into account proximity!
+///we should really not use a skip system, this is dumb
+///remove them from population, use backups to restore
+///cant, breaks ptrs
+///generate valid list, use that
+///maybe have dynamic skip list? that can't work
+
+///this is a dud optimisation, we'd need to know what comes near the path
+///impossible
+///without degrading the quality of the simulation more than I'd like
+void manager::skip_skippable(orbital* base, orbital* except)
+{
+    bool skipc = except->skip;
+
+    for(auto& i : can_skip_for_optimisation)
+    {
+        if(i < olist.size() && i >= 0)
+        {
+            double len = (base->pos - olist[i]->pos).length();
+
+            if(len < earth_sun_dist * 3.)
+                continue;
+
+            olist[i]->skip = true;
+        }
+        else
+        {
+            printf("Warning, invalid skip %i\n", i);
+        }
+    }
+
+    except->skip = skipc;
+}
+
+void manager::unskip_skippable()
+{
+    for(auto& i : can_skip_for_optimisation)
+    {
+        if(i < olist.size() && i >= 0)
+        {
+            olist[i]->skip = false;
+        }
+        else
+        {
+            printf("Warning, invalid skip %i\n", i);
+        }
+    }
+}
+*/
