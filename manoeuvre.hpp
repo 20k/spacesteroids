@@ -33,6 +33,7 @@ namespace manoeuvre
 
     struct manv
     {
+        ret_info* inf = nullptr;
         std::shared_ptr<std::future<void>> intercept_future;
 
         double time_elapsed = 0;
