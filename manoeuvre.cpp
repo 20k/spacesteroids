@@ -115,7 +115,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         }*/
 
 
-        double delay_ticks = 1000;
+        double delay_ticks = 2000;
 
         bool in_mainstream = oclone->contains(tclone);
 
