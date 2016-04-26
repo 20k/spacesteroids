@@ -168,8 +168,6 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         //printf("Time %f\n", clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
 
-        printf("rj\n");
-
         return {join};
     }
 
@@ -191,11 +189,43 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         ///?
         probe->accelerate_relative_to_velocity(inf->found_speed, inf->next_angle_offset, 1200);
 
+
+
+        ///relaunch if there's too much err
+        double max_error_distance = 0.1 * 1000 * 1000 * 1000;
+
+        max_error_distance = max(max_error_distance, target->radius * 2);
+
+        double dist = inf->mdist;
+        int tick = inf->mtick;
+
+        ///readjust at the halfway point
+        ///does not work if we time accelerate, need to save dt_s?
+        double mtime = tick * dt_s / 10;
+
+        mtime = std::max(mtime, 400. * dt_s);
+
+        printf("tickt %i\n", tick);
+
+        std::vector<manv> next_manouvers;
+
+        if(dist > max_error_distance)
+        {
+            //manv delay(target, WAIT);
+            manv adjust(target, INTERCEPT);
+
+            //delay.set_arg("time", mtime);
+
+            next_manouvers = {adjust};
+        }
+
         delete inf;
 
         delete intercept_thread;
 
         fin = true;
+
+        return next_manouvers;
     }
 
     if(does(BE_NEAR))
