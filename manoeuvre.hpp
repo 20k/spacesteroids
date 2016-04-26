@@ -36,7 +36,10 @@ namespace manoeuvre
         ret_info* inf = nullptr;
         std::shared_ptr<std::future<void>> intercept_future;
 
+        std::thread* intercept_thread;
+
         double time_elapsed = 0;
+        int ticks_elapsed = 0;
 
         bool fin = false;
 

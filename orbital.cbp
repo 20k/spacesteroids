@@ -21,6 +21,7 @@
 				<Option type="1" />
 				<Option compiler="mingw64" />
 				<Compiler>
+					<Add option="-O3" />
 					<Add option="-march=native" />
 					<Add option="-msse" />
 					<Add option="-msse2" />
@@ -29,13 +30,10 @@
 					<Add option="-m3dnow" />
 					<Add option="-mavx" />
 					<Add option="-msse2avx" />
-					<Add option="-maccumulate-outgoing-args" />
-					<Add option="-flto" />
-					<Add option="-Ofast" />
 					<Add option="-msse4.2" />
+					<Add option="-flto" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
 					<Add option="-flto" />
 				</Linker>
 			</Target>
@@ -72,13 +70,13 @@
 			<Add option="-std=gnu++14" />
 			<Add option="-Wno-sign-compare" />
 			<Add option="-Wno-unused-variable" />
-			<Add option="-fopenmp" />
+			<Add option="-lpthread" />
 		</Compiler>
 		<Linker>
 			<Add option="-lsfml-graphics" />
 			<Add option="-lsfml-window" />
 			<Add option="-lsfml-system" />
-			<Add option="-fopenmp" />
+			<Add option="-lpthread" />
 		</Linker>
 		<Unit filename="game_manager.cpp" />
 		<Unit filename="game_manager.hpp" />

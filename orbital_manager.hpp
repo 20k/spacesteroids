@@ -74,7 +74,7 @@ struct manager
     void display(sf::RenderTarget& win, float r = 2);
 
 
-    vector<vector<vec2d>> test           (int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
+    vector<vector<vec2d>> test(int ticks, float dt_cur, float dt_old, sf::RenderWindow* tex, bool render = true, orbital* test_orbital = nullptr, std::vector<orbital*> info_to_retrieve = std::vector<orbital*>());
     void test_with_cache(int ticks, float dt_cur, float dt_old, double target_distance, int& min_tick, double& min_dist, orbital* test_orbital, orbital* target_orbital, const std::vector<orbital*>& to_insert_into_stream, std::vector<std::vector<vec2d>>& cache);
 
     ///here the test orbital is a member of the manager

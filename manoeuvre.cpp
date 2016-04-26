@@ -68,7 +68,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
             }
         }
 
-        printf("%f %f  n %f %f\n", EXPAND_2(probe->pos), EXPAND_2(target->pos));
+        //printf("%f %f  n %f %f\n", EXPAND_2(probe->pos), EXPAND_2(target->pos));
 
 
         manager* oclone = orbital_manager.clone();
@@ -81,7 +81,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         else
             tclone = target->clone();
 
-        printf("nt %f %f %f %f\n", EXPAND_2(tclone->pos), tclone->mass, target->mass);
+        //printf("nt %f %f %f %f\n", EXPAND_2(tclone->pos), tclone->mass, target->mass);
 
 
         //printf("Time elapsed %f\n", clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
@@ -115,24 +115,50 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         }*/
 
 
+        double delay_ticks = 1000;
+
+        bool in_mainstream = oclone->contains(tclone);
+
+        for(int i=0; i<delay_ticks; i++)
+        {
+            oclone->tick(dt_s, dt_s);
+            oclone->tick_only_probes(dt_s, dt_s, {pclone}, false);
+
+            ///absorption?
+            if(!in_mainstream)
+                oclone->tick_only_probes(dt_s, dt_s, {tclone}, false);
+        }
+
         ///will have target and probe available as arguments
         manv join(target, THREAD_WAITER);
         join.inf = new ret_info;
 
+        join.set_arg("dticks", delay_ticks);
+
+        ///tick oclone forwards by x ticks
+        ///save that
 
         ///next add ticks into the future to resolve this
         ///then when time_elapsed == that, force block and execute
         ///should probably count ticks in main and pass it here so there's no discrepancy
         arg_s bargs = {max_len_yr, oclone, test_offset, max_error_distance, pclone, tclone, join.inf};
 
-        join.intercept_future = std::shared_ptr<std::future<void>>(new std::future<void>(std::async(bisect_wrapper, bargs)));
+        //join.intercept_future = std::shared_ptr<std::future<void>>(new std::future<void>(std::async(std::launch::async, bisect_wrapper, bargs)));
+
+        //auto fut = std::async(std::launch::deferred, bisect_wrapper, bargs);
+
+        //fut.wait();
+
+        join.intercept_thread = new std::thread(std::bind(bisect_wrapper, bargs));
+
+        //join.intercept_thread->join();
 
         printf("launch\n");
 
-        if(!join.intercept_future->valid())
+        /*if(!join.intercept_future->valid())
         {
             printf("Not valid?!\n");
-        }
+        }*/
 
         /*join.intercept_future->wait();
 
@@ -140,17 +166,34 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         //printf("%f %f\n", info.found_speed, info.next_angle_offset);
 
-        printf("Time %f\n", clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
+        //printf("Time %f\n", clk.getElapsedTime().asMicroseconds() / 1000. / 1000.);
+
+        printf("rj\n");
 
         return {join};
     }
 
     if(does(THREAD_WAITER))
     {
-        intercept_future->wait();
+        //printf("ticks %i %f\n", ticks_elapsed, args["dticks"]);
+
+        if(ticks_elapsed < args["dticks"])
+            return std::vector<manv>();
+
+        printf("fin %i\n", ticks_elapsed);
+
+        //intercept_future->wait();
+
+        intercept_thread->join();
+
+        printf("Years %f\n", inf->mtick * dt_s / 60 / 60 / 24 / 365);
 
         ///?
         probe->accelerate_relative_to_velocity(inf->found_speed, inf->next_angle_offset, 1200);
+
+        delete inf;
+
+        delete intercept_thread;
 
         fin = true;
     }
@@ -228,6 +271,7 @@ std::vector<manv> manv::tick_post(manager& orbital_manager, orbital* probe, orbi
     }
 
     time_elapsed += dt;
+    ticks_elapsed++;
 
     return std::vector<manv>();
 }

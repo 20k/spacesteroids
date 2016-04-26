@@ -643,12 +643,11 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
     //const float dt_max = dt_cur;
     //const float dt_min = dt_cur;
 
+    const std::vector<orbital*>& cur_orbitals = orbital_manager.olist;
 
     for(int i=0; i<tick_num; i++)
     {
         std::vector<vec2d>& this_tick_cache = object_cache[i];
-
-        const std::vector<orbital*>& cur_orbitals = orbital_manager.olist;
 
         for(auto& j : cur_orbitals)
         {
@@ -660,6 +659,7 @@ std::vector<std::vector<vec2d>> get_object_cache(manager& orbital_manager, int t
         dt_old = dt_cur;
         //dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_num;
     }
+
 
     for(int i=0; i<old_orbitals.size(); i++)
     {
@@ -703,11 +703,13 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     if(c == 0)
         cache = get_object_cache(*this, ticks, dt_cur, dt_old);
 
+
     int this_ticks = ticks;
 
     int tick_reduction_start = 1;
 
     bool short_path_opt = last_found_minimum_tick < 0.1f * ticks;
+
 
     ///do better tick reduction based on past, itll probably be more accurate
     if(c >= tick_reduction_start)
@@ -757,6 +759,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
             break;
         }
     }
+
 
     const float distance_weight_at_max_time = 1.1;
 
@@ -893,12 +896,14 @@ void bisect_wrapper(arg_s arg)
 
     printf("hello\n");
 
-    printf("%f %f  n %f %f\n", EXPAND_2(arg.probe->pos), EXPAND_2(arg.target->pos));
+    //printf("%f %f  n %f %f\n", EXPAND_2(arg.probe->pos), EXPAND_2(arg.target->pos));
 
     ret_info info = arg.orbital_manager->bisect_with_cache(arg.ticks, dt_s, dt_s,
                     0.1, 0.1, 2000.0,
                     arg.offset, M_PI/2., 3,
                     3, 16, 0., arg.error_dist, arg.probe, arg.target);
+
+    printf("pbisect\n");
 
     *arg.inf = info;
 }
