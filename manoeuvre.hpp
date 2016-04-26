@@ -27,14 +27,16 @@ namespace manoeuvre
         WAIT = 2 << 5,
         UNCAPTURE = 2 << 6,
         THREAD_WAITER = 2 << 7,
+        AUTOMATIC_ASTEROID_HUNT = 2 << 8,
     };
 
     ///lets totally scrap the manov structure
 
     struct manv
     {
+        std::vector<orbital*>* hostile_targets = nullptr;
+
         ret_info* inf = nullptr;
-        std::shared_ptr<std::future<void>> intercept_future;
 
         std::thread* intercept_thread;
 
@@ -46,6 +48,7 @@ namespace manoeuvre
         manov_type type = NONE;
 
         orbital* target = nullptr;
+        orbital* ditch_target = nullptr;
 
         bool blocking = true;
 
@@ -81,6 +84,7 @@ namespace manoeuvre
         void make_return_trip(orbital* target, orbital* home);
         void make_single_trip(orbital* target);
         void make_return_capture(orbital* target, orbital* home);
+        void hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids);
 
         void capture_and_ditch(orbital* target, orbital* ditch_into);
 

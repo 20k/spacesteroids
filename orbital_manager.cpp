@@ -1081,6 +1081,32 @@ orbital* manager::get_nearest(const std::vector<orbital*>& orbitals, vec2d mouse
     return ret;
 }
 
+orbital* manager::get_nearest(const std::vector<orbital*>& orbitals, orbital* local)
+{
+    double min_dist = DBL_MAX;
+    orbital* ret = nullptr;
+
+    for(auto& i : orbitals)
+    {
+        if(!i)
+            continue;
+
+        if(i->skip)
+            continue;
+
+        double ndist = (i->pos - local->pos).length();
+
+        if(ndist < min_dist)
+        {
+            min_dist = ndist;
+            ret = i;
+        }
+    }
+
+    return ret;
+}
+
+
 void manager::restore_from_backup(const std::vector<orbital>& backup)
 {
     if(backup.size() != olist.size())

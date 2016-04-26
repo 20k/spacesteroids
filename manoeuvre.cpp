@@ -180,7 +180,6 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         printf("fin %i\n", ticks_elapsed);
 
-        //intercept_future->wait();
 
         intercept_thread->join();
 
@@ -188,7 +187,6 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         ///?
         probe->accelerate_relative_to_velocity(inf->found_speed, inf->next_angle_offset, 1200);
-
 
 
         ///relaunch if there's too much err
@@ -201,9 +199,9 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         ///readjust at the halfway point
         ///does not work if we time accelerate, need to save dt_s?
-        double mtime = tick * dt_s / 10;
+        //double mtime = tick * dt_s / 10;
 
-        mtime = std::max(mtime, 400. * dt_s);
+        //mtime = std::max(mtime, 400. * dt_s);
 
         printf("tickt %i\n", tick);
 
@@ -228,8 +226,58 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         return next_manouvers;
     }
 
+    ///need to be able to specify a separate ditch and guard target. Eg we might be stationed around neptune
+    ///but want to ditch into jupiter
+    ///similarly, we might simply want to parent to a relative point in space, eg a lagrange point, or simply just somewhere
+    ///relative to a body
+    ///but we'd need a proper ui for that
+    if(does(AUTOMATIC_ASTEROID_HUNT))
+    {
+        if(hostile_targets == nullptr)
+        {
+            fin = true;
+            return std::vector<manv>();
+        }
+
+        orbital* nearest = orbital_manager.get_nearest(*hostile_targets, probe);
+
+        double max_dist = earth_sun_dist * 50.;
+
+        ///hunt
+        if(nearest && (nearest->pos - probe->pos).length() < max_dist)
+        {
+            manv m1(nearest, INTERCEPT);
+            manv m2(nearest, BE_NEAR);
+
+            manv mcapture(nearest, CAPTURE);
+
+            manv md(ditch_target, INTERCEPT);
+            manv mw(ditch_target, WAIT);
+            manv ditch(ditch_target, UNCAPTURE);
+
+            manv ri(target, INTERCEPT);
+            manv hm(target, ORBIT);
+            manv asteroid_hunt(target, AUTOMATIC_ASTEROID_HUNT);
+
+            mw.set_arg("time", 10 * dt_s);
+
+            asteroid_hunt.hostile_targets = hostile_targets;
+            asteroid_hunt.ditch_target = ditch_target;
+
+            fin = true;
+
+            return {m1, m2, mcapture, md, mw, ditch, ri, hm, asteroid_hunt};
+        }
+    }
+
     if(does(BE_NEAR))
     {
+        if(!target || target->skip)
+        {
+            fin = true;
+            return {};
+        }
+
         double diff = (target->pos - probe->pos).length();
 
         if(diff < 0.4 * 1000 * 1000 * 1000)
@@ -257,6 +305,13 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         target->pos = target->old_pos + diff;*/
 
+        if(!target || target->skip)
+        {
+            ///don't fin, itll break the uncapture
+            //fin = true;
+            return {};
+        }
+
         target->pos = probe->pos;
         target->old_pos = probe->old_pos;
     }
@@ -273,28 +328,32 @@ std::vector<manv> manv::tick_post(manager& orbital_manager, orbital* probe, orbi
 {
     if(does(ORBIT))
     {
-        if(target != nullptr)
+        if(target == nullptr || target->skip)
         {
-            double diff = (probe->pos - target->pos).length();
+            fin = true;
+            return {};
+        }
 
-            //if(diff < orbit_distance * 1.2)
 
-            ///yup, this was the issue!
-            if(diff < target->radius * 100)
-            {
-                double rad = diff;
+        double diff = (probe->pos - target->pos).length();
 
-                double orbital_velocity = target->get_orbital_velocity(rad);
+        //if(diff < orbit_distance * 1.2)
 
-                vec2d diff = target->pos - target->old_pos;
+        ///yup, this was the issue!
+        if(diff < target->radius * 100)
+        {
+            double rad = diff;
 
-                probe->orbit_speed(orbital_velocity, target->pos);
+            double orbital_velocity = target->get_orbital_velocity(rad);
 
-                if(target != sun)
-                    probe->old_pos = probe->old_pos - diff;
+            vec2d diff = target->pos - target->old_pos;
 
-                fin = true;
-            }
+            probe->orbit_speed(orbital_velocity, target->pos);
+
+            if(target != sun)
+                probe->old_pos = probe->old_pos - diff;
+
+            fin = true;
         }
 
         //printf("torbit\n");
@@ -451,6 +510,21 @@ void manov_list::capture_and_ditch(orbital* target, orbital* ditch_into)
     man_list.push_back(ditch);
     //man_list.push_back(morb);
 }
+
+void manov_list::hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids)
+{
+    manv mo(parent, INTERCEPT);
+    manv mr(parent, ORBIT);
+
+    manv m1(parent, AUTOMATIC_ASTEROID_HUNT);
+    m1.hostile_targets = hostile_asteroids;
+    m1.ditch_target = ditch_into;
+
+    man_list.push_back(mo);
+    man_list.push_back(mr);
+    man_list.push_back(m1);
+}
+
 
 void manov_list::uncapture()
 {

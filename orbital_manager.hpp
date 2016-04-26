@@ -104,6 +104,7 @@ struct manager
     void plot_orbit(orbital* o, int ticks, sf::RenderWindow& tex);
 
     orbital* get_nearest(const std::vector<orbital*>& orbitals, vec2d mouse_screen_pos, vec2d screen_dim);
+    orbital* get_nearest(const std::vector<orbital*>& orbitals, orbital* local);
 
     void restore_from_backup(const std::vector<orbital>& backup);
 

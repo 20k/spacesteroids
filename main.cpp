@@ -172,6 +172,8 @@ int main()
     manoeuvre::manov_list current_mlist;
     current_mlist.set_probe(currently_in_control);
 
+    std::map<orbital*, manoeuvre::manov_list> manoeuvre_map;
+
     ///create new satellites, control them. Delete them as a debug, but in reality we have to crash them into something
     ///need for right click to work
 
@@ -457,8 +459,8 @@ int main()
             //orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.)->transitory_draw_col = {1, 0, 0};
 
 
-            orbital* ntarget = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
-            //orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
+            //orbital* ntarget = orbital_manager.get_nearest(orbital_manager.olist, m, wh * 2.);
+            orbital* ntarget = orbital_manager.get_nearest(asteroids, m, wh * 2.);
             orbital* nhostile = orbital_manager.get_nearest(game_state.olist, m, wh*2.);
 
             orbital* target = orbital_manager.get_nearest({ntarget, nhostile}, m, wh * 2.);
@@ -481,34 +483,85 @@ int main()
 
                 if(once<sf::Keyboard::C>())
                 {
-                    current_mlist.uncapture();
+                    manoeuvre_map[currently_in_control].uncapture();
                 }
 
                 if(once<sf::Mouse::Right>())
                 {
-                    current_mlist.man_list.clear();
+                    manoeuvre_map[currently_in_control].man_list.clear();
 
-                    current_mlist.make_single_trip(target);
+                    manoeuvre_map[currently_in_control].make_single_trip(target);
                 }
+
+                /*if(once<sf::Mouse::Middle>())
+                {
+                    //current_mlist.man_list.clear();
+
+                    //current_mlist.make_return_trip(target, earth);
+
+                    manoeuvre_map[currently_in_control].make_single_trip(earth);
+                }*/
 
                 if(once<sf::Mouse::Middle>())
                 {
-                    current_mlist.man_list.clear();
-
-                    current_mlist.make_return_trip(target, earth);
+                    ///orbit arg1, ditch into arg2
+                    manoeuvre_map[currently_in_control].hunt_for_asteroids(jupiter, saturn, &game_state.olist);
                 }
 
+                ///we want auto target recognition and disposal
                 if(once<sf::Mouse::Left>())
                 {
-                    current_mlist.man_list.clear();
+                    //current_mlist.man_list.clear();
 
-                    current_mlist.capture_and_ditch(target, jupiter);
-                    current_mlist.make_single_trip(earth);
+                    manoeuvre_map[currently_in_control].capture_and_ditch(target, jupiter);
+                    //current_mlist.make_single_trip(earth);
                 }
 
                 if(once<sf::Keyboard::Tab>())
                 {
                     game_state.spawn_hostile_asteroid(earth, sun);
+                }
+
+                ///prev ship
+                if(once<sf::Keyboard::Z>())
+                {
+                    int i;
+
+                    for(i=0; i<player_satellites.size(); i++)
+                    {
+                        if(currently_in_control == player_satellites[i])
+                            break;
+                    }
+
+                    i--;
+
+                    i = clamp(i, 0, player_satellites.size()-1);
+
+                    currently_in_control = player_satellites[i];
+                }
+
+                ///next ship
+                if(once<sf::Keyboard::X>())
+                {
+                    int i;
+
+                    for(i=0; i<player_satellites.size(); i++)
+                    {
+                        if(currently_in_control == player_satellites[i])
+                            break;
+                    }
+
+                    i++;
+
+                    i = clamp(i, 0, player_satellites.size()-1);
+
+                    currently_in_control = player_satellites[i];
+                }
+
+                ///make new ship
+                if(once<sf::Keyboard::Q>())
+                {
+                    player_satellites.push_back(new orbital(*voyager_base));
                 }
 
                 ///will not work on planets
@@ -535,7 +588,14 @@ int main()
             if((key.isKeyPressed(sf::Keyboard::F) && win.hasFocus()) || toggled_going)
             {
                 ///split into calculate and apply so we can do everything atomically?
-                current_mlist.tick_pre(orbital_manager);
+                //current_mlist.tick_pre(orbital_manager);
+
+                for(auto& i : manoeuvre_map)
+                {
+                    i.second.set_probe(i.first);
+
+                    i.second.tick_pre(orbital_manager);
+                }
 
                 orbital_manager.tick(dt_s, dt_old);
 
@@ -565,7 +625,12 @@ int main()
                     }
                 }*/
 
-                current_mlist.tick_post(orbital_manager, sun);
+                //current_mlist.tick_post(orbital_manager, sun);
+
+                for(auto& i : manoeuvre_map)
+                {
+                    i.second.tick_post(orbital_manager, sun);
+                }
 
                 orbital_manager.tick_only_probes(dt_s, dt_old, asteroids, true);
                 orbital_manager.tick_only_probes(dt_s, dt_old, game_state.olist, true);
@@ -598,6 +663,10 @@ int main()
             orbital_manager.draw_bulk(game_state.olist, win, 1.5);
 
             orbital_manager.draw_bulk(player_satellites, win, 2);
+
+            currently_in_control->transitory_draw_col = {0, 1, 0};
+
+            orbital_manager.draw_bulk({currently_in_control}, win, 3);
 
             orbital_manager.display(win);
 
