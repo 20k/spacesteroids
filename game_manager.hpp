@@ -8,6 +8,7 @@
 struct game_manager
 {
     std::vector<orbital*> olist;
+    std::map<orbital*, bool> skip_hunting;
 
     void spawn_hostile_asteroid(orbital* earth, orbital* sun);
 };

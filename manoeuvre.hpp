@@ -34,6 +34,7 @@ namespace manoeuvre
 
     struct manv
     {
+        std::map<orbital*, bool>* skip_hunting = nullptr;
         std::vector<orbital*>* hostile_targets = nullptr;
 
         ret_info* inf = nullptr;
@@ -84,7 +85,7 @@ namespace manoeuvre
         void make_return_trip(orbital* target, orbital* home);
         void make_single_trip(orbital* target);
         void make_return_capture(orbital* target, orbital* home);
-        void hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids);
+        void hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids, std::map<orbital*, bool>* hostile_skip_list);
 
         void capture_and_ditch(orbital* target, orbital* ditch_into);
 

@@ -239,13 +239,17 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
             return std::vector<manv>();
         }
 
-        orbital* nearest = orbital_manager.get_nearest(*hostile_targets, probe);
+        orbital* nearest = orbital_manager.get_nearest_with_skip_map(*hostile_targets, probe, *skip_hunting);
 
+        ///we can make this an upgradable quantity per satellite
+        ///as you get new tech, range becomes longer, auto killer satellites become more robust
         double max_dist = earth_sun_dist * 50.;
 
         ///hunt
         if(nearest && (nearest->pos - probe->pos).length() < max_dist)
         {
+            (*skip_hunting)[nearest] = true;
+
             manv m1(nearest, INTERCEPT);
             manv m2(nearest, BE_NEAR);
 
@@ -263,6 +267,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
             asteroid_hunt.hostile_targets = hostile_targets;
             asteroid_hunt.ditch_target = ditch_target;
+            asteroid_hunt.skip_hunting = skip_hunting;
 
             fin = true;
 
@@ -511,7 +516,7 @@ void manov_list::capture_and_ditch(orbital* target, orbital* ditch_into)
     //man_list.push_back(morb);
 }
 
-void manov_list::hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids)
+void manov_list::hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::vector<orbital*>* hostile_asteroids, std::map<orbital*, bool>* hostile_skip_list)
 {
     manv mo(parent, INTERCEPT);
     manv mr(parent, ORBIT);
@@ -519,6 +524,7 @@ void manov_list::hunt_for_asteroids(orbital* parent, orbital* ditch_into, std::v
     manv m1(parent, AUTOMATIC_ASTEROID_HUNT);
     m1.hostile_targets = hostile_asteroids;
     m1.ditch_target = ditch_into;
+    m1.skip_hunting = hostile_skip_list;
 
     man_list.push_back(mo);
     man_list.push_back(mr);

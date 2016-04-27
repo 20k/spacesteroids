@@ -502,12 +502,21 @@ int main()
                     manoeuvre_map[currently_in_control].make_single_trip(earth);
                 }*/
 
+                ///if there's only one asteroid left, we'll continuously recapture it
+                ///we also need some kind of mechanism to remove conflicts to stop multiple satellites intercepting the same asteroid
+                ///either expand the orbital* class (seems bad), or have a global skip list in game_state?
+                ///we can just have a std::map in game_state, then set it as private member to that
+                ///save/load is getting pretty iffy though
+
+                ///so, if something gets absorbed along the path, we'll not intercept it (or we'll probably do it wrong)
+                ///we need to turn on absorption in the tick_with_probes thing
                 if(once<sf::Mouse::Middle>())
                 {
                     ///orbit arg1, ditch into arg2
-                    manoeuvre_map[currently_in_control].hunt_for_asteroids(jupiter, saturn, &game_state.olist);
+                    manoeuvre_map[currently_in_control].hunt_for_asteroids(jupiter, saturn, &game_state.olist, &game_state.skip_hunting);
                 }
 
+                ///have an ignore list? Use in get_nearest?
                 ///we want auto target recognition and disposal
                 if(once<sf::Mouse::Left>())
                 {

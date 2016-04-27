@@ -47,12 +47,11 @@ void manager::tick(float dt_cur, float dt_old)
 
             vec2d r12N = r12 / max(r12l, 1.);
 
-            const double rad = 69911 * pow(10, 3);
+            ///either clamp to radius of jupiter, or twice the real radius
+            double max_dist = max(69911 * pow(10, 3), o1->radius * 2);
 
-            ///???
-            ///radius of jupiter
-            if(r12l < rad)
-                r12l = rad;
+            r12l = max(r12l, max_dist);
+
 
             double NFac = gravitational_constant / (r12l * r12l);
 
@@ -130,8 +129,9 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
 
             if(!absorption)
             {
-                if(r12l < 69911 * pow(10, 3))
-                    r12l = 69911 * pow(10, 3);
+                double max_dist = max(69911 * pow(10, 3), o1->radius * 2);
+
+                r12l = max(r12l, max_dist);
             }
             else
             {
@@ -738,6 +738,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 
         int tick_extension = ticks * extension_frac;
 
+
         int tick_differential_extension = last_found_minimum_tick + atick_diff * 8 + tick_extension * 0.01 + 50;// * extension_frac;
 
         this_ticks = last_found_minimum_tick + tick_extension;
@@ -761,7 +762,7 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
     }
 
 
-    const float distance_weight_at_max_time = 1.1;
+    const float distance_weight_at_max_time = 1.3;
 
     std::vector<orbital*> stream_add;
 
@@ -892,18 +893,12 @@ ret_info manager::bisect_with_cache(int ticks, float dt_cur, float dt_old,
 ///remember we need to clone shit or itll break
 void bisect_wrapper(arg_s arg)
 {
-    //return {};
-
-    printf("hello\n");
-
     //printf("%f %f  n %f %f\n", EXPAND_2(arg.probe->pos), EXPAND_2(arg.target->pos));
 
     ret_info info = arg.orbital_manager->bisect_with_cache(arg.ticks, dt_s, dt_s,
                     0.1, 0.1, 2000.0,
                     arg.offset, M_PI/2., 3,
                     3, 16, 0., arg.error_dist, arg.probe, arg.target);
-
-    printf("pbisect\n");
 
     *arg.inf = info;
 }
@@ -1105,6 +1100,38 @@ orbital* manager::get_nearest(const std::vector<orbital*>& orbitals, orbital* lo
 
     return ret;
 }
+
+
+
+orbital* manager::get_nearest_with_skip_map(const std::vector<orbital*>& orbitals, orbital* local, std::map<orbital*, bool>& skip_map)
+{
+    double min_dist = DBL_MAX;
+    orbital* ret = nullptr;
+
+    for(auto& i : orbitals)
+    {
+        if(!i)
+            continue;
+
+        if(i->skip)
+            continue;
+
+        if(skip_map[i])
+            continue;
+
+        double ndist = (i->pos - local->pos).length();
+
+        if(ndist < min_dist)
+        {
+            min_dist = ndist;
+            ret = i;
+        }
+    }
+
+    return ret;
+}
+
+
 
 
 void manager::restore_from_backup(const std::vector<orbital>& backup)
