@@ -31,6 +31,12 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
             return std::vector<manv>();
         }
 
+        if(target->skip)
+        {
+            fin = true;
+            return {};
+        }
+
 
         ///696 * 1000 * 1000 is the radius of the sun
         ///so this is 100 * 1000 * 1000
@@ -115,7 +121,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         }*/
 
 
-        double delay_ticks = 2000;
+        double delay_ticks = 3000;
 
         bool in_mainstream = oclone->contains(tclone);
 
@@ -243,7 +249,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         ///we can make this an upgradable quantity per satellite
         ///as you get new tech, range becomes longer, auto killer satellites become more robust
-        double max_dist = earth_sun_dist * 50.;
+        double max_dist = earth_sun_dist * 30.;
 
         ///hunt
         if(nearest && (nearest->pos - probe->pos).length() < max_dist)

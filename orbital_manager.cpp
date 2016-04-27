@@ -161,6 +161,11 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
                 ///need to limit to perp
                 if(line_to_hit.squared_length() < o1->radius*o1->radius * 64 && valid_skip_candidate)
                 {
+                    ///???
+                    //o2->pos = o1->pos;
+                    //o2->old_pos = o1->old_pos;
+                    ///???
+
                     o2->skip = true;
                     continue;
                 }
@@ -441,6 +446,10 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
     //const float dt_max = dt_cur;
     //const float dt_min = dt_cur;
 
+    ///so its official i guess, anything in the mainstream orbital list is a massive body
+    ///informal adhoc unenforced specifications are the joy of any software project
+    bool target_is_massive = contains(target_orbital);
+
     int tick_max_size = cache.size();
 
     int mtick = -1;
@@ -468,6 +477,8 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         ///targets can be: asteroids, planets, etc
         ///however, if we're a planet (ie part of mainstream tick), we're NOT in to_insert
         ///therefore we wont be absorbed
+        ///if we have true, the simulation exploits the fact that we can be situated inside a body for high acc ;_;
+        ///but we cant completely skip the skip case because otherwise intersection doesn't work
         tick_only_probes(dt_cur, dt_old, to_insert, true);
 
         double len = (test_orbital->pos - target_orbital->pos).length();
@@ -479,6 +490,23 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         //if(target_orbital->skip || test_orbital->skip)
         //    len = DBL_MAX;
 
+        //double eh_good_enough_distance = jupiter_radius * 8;
+
+        ///if we're not intentionally trying to hit a planet
+        if(!target_is_massive)
+        {
+            ///if i've hit a planet, or the target has hit a planet
+            ///this path is henceforth fucked
+            if(target_orbital->skip || test_orbital->skip)
+                len = DBL_MAX;
+
+            ///ideally we want to check in the future after doing this that we don't immediately slam into a planet
+            ///but hopefully inserting something like a permanent conditional nonblocking orbit into the manouervere list would fix that
+        }
+
+        ///ok so. If skip && len - target_distance > some amount
+        ///this way we exclude skip, unless the skip is because we're within a certain distance of the target
+
         if(fabs(len - target_distance) < mdist)
         {
             mdist = fabs(len - target_distance);
@@ -488,9 +516,6 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
         dt_old = dt_cur;
         //dt_cur = dt_min + (dt_max - dt_min) * (float)i / tick_max_size;
     }
-
-    ///we're forgetting to reset pos and old_pos
-    ///that is the issue
 
     min_tick = mtick;
     min_dist = mdist;
