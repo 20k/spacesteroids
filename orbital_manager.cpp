@@ -127,6 +127,8 @@ void manager::tick_only_probes(float dt_cur, float dt_old, const std::vector<orb
             ///???
             ///radius of jupiter
 
+            ///maybe just skip the tick if r12l < max_dist
+            ///for above as well
             if(!absorption)
             {
                 double max_dist = max(69911 * pow(10, 3), o1->radius * 2);
@@ -462,9 +464,20 @@ void manager::test_with_cache(int ticks, float dt_cur, float dt_old, double targ
             o1->pos = cache[i+1][j];
         }
 
-        tick_only_probes(dt_cur, dt_old, to_insert);
+        ///we're enabling absorption for targets
+        ///targets can be: asteroids, planets, etc
+        ///however, if we're a planet (ie part of mainstream tick), we're NOT in to_insert
+        ///therefore we wont be absorbed
+        tick_only_probes(dt_cur, dt_old, to_insert, true);
 
         double len = (test_orbital->pos - target_orbital->pos).length();
+
+        ///this breaks everything
+        ///looks like we're trying to minimise target distance, but the radius > target distance
+        ///we cant optimise for a distance < target otherwise on the correct distance, we're absorbed
+        ///however, a skip might help anyway
+        //if(target_orbital->skip || test_orbital->skip)
+        //    len = DBL_MAX;
 
         if(fabs(len - target_distance) < mdist)
         {
