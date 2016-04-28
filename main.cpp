@@ -15,6 +15,8 @@ using namespace std;
 
 #include "ui.hpp"
 
+#include "asteroid_manager.hpp"
+
 
 ///has the button been pressed once, and only once
 template<sf::Keyboard::Key k>
@@ -84,6 +86,10 @@ struct pds
 
 int pds::gid;
 
+#if 0
+///split into add, and then fetch
+///store in struct
+
 ///we need a generic asteroid manager to store this info
 std::map<orbital*, pds> calculate_asteroid_names_with_random_discovery_year(int min_year, int max_year, const std::vector<orbital*>& orbitals)
 {
@@ -92,18 +98,6 @@ std::map<orbital*, pds> calculate_asteroid_names_with_random_discovery_year(int 
     ///no z, no i
     char letters[] = "abcdefghjklmnopqrstuvwxy";
     char second_letters[] = "abcdefghjklmnopqrstuvwxyz";
-
-    /*std::vector<int> year_discovered;
-    std::vector<int> half_month_discovered; /// 0 -> 23
-
-    for(auto& o : orbitals)
-    {
-        int ryear = randf_s(minyear, maxyear);
-        int rhalfmonth = randf_s(0, 23 + 1);
-
-        year_discovered.push_back(ryear);
-        half_month_discovered.push_back(rhalfmonth);
-    }*/
 
     ///map time to id
     std::vector<std::pair<float, int>> exact_discovery_time;
@@ -205,6 +199,26 @@ std::map<orbital*, pds> calculate_asteroid_names_with_random_discovery_year(int 
 
     return ret;
 }
+#endif // 0
+
+void calculate_asteroid_names_with_random_discovery_year(int min_year, int max_year, const std::vector<orbital*>& orbitals, asteroid_manager& amanage)
+{
+    ///go to your doctor to get your roids sorted
+    std::vector<std::pair<float, orbital*>> sorted_roids;
+
+
+    for(auto& i : orbitals)
+    {
+        float year = randf_s((float)min_year, (float)max_year);
+
+        sorted_roids.push_back({year, i});
+    }
+
+    for(auto& i : sorted_roids)
+    {
+        amanage.discover(i.second, i.first);
+    }
+}
 
 ///game design
 ///harvest asteroids for fuel + materials
@@ -304,9 +318,11 @@ int main()
     ///could probably build this list automatically, if mass < 10^25
     //orbital_manager.set_unimportant_planet_skip({1, 2, 3, 4, 9});
 
-    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
+    std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 1000);
 
-    auto asteroid_names = calculate_asteroid_names_with_random_discovery_year(1960, 2017, asteroids);
+    asteroid_manager amanage;
+
+    calculate_asteroid_names_with_random_discovery_year(1960, 2017, asteroids, amanage);
 
 
     std::vector<orbital*> player_satellites;
@@ -870,9 +886,10 @@ int main()
             }
 
             ///we need to be able to update the asteroid names manager
-            if(asteroid_names.count(target) > 0)
+            //if(asteroid_names.count(target) > 0)
+            if(amanage.get_name(target) != "")
             {
-                pds desc = asteroid_names[target];
+                //pds desc = asteroid_names[target];
                 orbital* o = target;
 
                 vec2d screen_pos = manager::pos2screen(o->pos) + (vec2d){win.getSize().x/2., win.getSize().y/2.};
@@ -880,7 +897,9 @@ int main()
                 ui_element elem(ui::TEXT);
                 elem.set_relative_pos(conv<double, float>(screen_pos + (vec2d){10, 5}));
 
-                elem.text = desc.name;
+                //elem.text = desc.name;
+
+                elem.text = amanage.get_name(target);
 
                 elem.draw(win);
             }
