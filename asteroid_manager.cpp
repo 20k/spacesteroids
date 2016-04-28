@@ -70,7 +70,7 @@ void asteroid_manager::discover(orbital* o, float year)
     char first_l = first_letters[imonth];
     char second_l = second_letters[lc];
 
-    std::string name = std::to_string((int)year) + " " + first_l + second_l + std::to_string(num);
+    std::string name = std::to_string((int)year) + " " + first_l + second_l + " " + std::to_string(num);
 
     cached_names[my_id] = name;
 }
