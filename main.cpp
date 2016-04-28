@@ -75,11 +75,17 @@ struct pds
     {
         name = _name;
     }
+
+    pds()
+    {
+
+    }
 };
 
 int pds::gid;
 
-std::vector<pds> calculate_asteroid_names_with_random_discovery_year(int min_year, int max_year, const std::vector<orbital*>& orbitals)
+///we need a generic asteroid manager to store this info
+std::map<orbital*, pds> calculate_asteroid_names_with_random_discovery_year(int min_year, int max_year, const std::vector<orbital*>& orbitals)
 {
     char skipped_letter = 'i';
 
@@ -147,7 +153,7 @@ std::vector<pds> calculate_asteroid_names_with_random_discovery_year(int min_yea
             std::sort(j.begin(), j.end());
     }
 
-    std::vector<pds> ret_pds;
+    std::vector<std::pair<int, pds>> ret_pds;
 
     int year = min_year;
 
@@ -174,9 +180,9 @@ std::vector<pds> calculate_asteroid_names_with_random_discovery_year(int min_yea
 
                 std::string str = std::to_string(year) + " " + first_letter + second_letter + " " + std::to_string(minor_number);
 
-                std::cout << str << std::endl;
+                //std::cout << str << std::endl;
 
-                ret_pds.push_back(pds(str));
+                ret_pds.push_back({a.second, pds(str)});
 
                 sl++;
             }
@@ -188,7 +194,16 @@ std::vector<pds> calculate_asteroid_names_with_random_discovery_year(int min_yea
         year++;
     }
 
-    return ret_pds;
+    std::sort(ret_pds.begin(), ret_pds.end(), [](auto l1, auto l2){return l1.first < l2.first;});
+
+    std::map<orbital*, pds> ret;
+
+    for(auto& i : ret_pds)
+    {
+        ret[orbitals[i.first]] = i.second;
+    }
+
+    return ret;
 }
 
 ///game design
@@ -850,6 +865,22 @@ int main()
                     capd[0] = toupper(capd[0]);
 
                 elem.text = capd;
+
+                elem.draw(win);
+            }
+
+            ///we need to be able to update the asteroid names manager
+            if(asteroid_names.count(target) > 0)
+            {
+                pds desc = asteroid_names[target];
+                orbital* o = target;
+
+                vec2d screen_pos = manager::pos2screen(o->pos) + (vec2d){win.getSize().x/2., win.getSize().y/2.};
+
+                ui_element elem(ui::TEXT);
+                elem.set_relative_pos(conv<double, float>(screen_pos + (vec2d){10, 5}));
+
+                elem.text = desc.name;
 
                 elem.draw(win);
             }
