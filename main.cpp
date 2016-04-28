@@ -13,6 +13,8 @@ using namespace std;
 
 #include "game_manager.hpp"
 
+#include "ui.hpp"
+
 
 ///has the button been pressed once, and only once
 template<sf::Keyboard::Key k>
@@ -59,6 +61,136 @@ bool once()
     return false;
 }
 
+///when we name asteroids, we'll eventually dynamically calculated the provisional name based off when the planet actually discovered them
+
+///is this just a planet descriptor, or a generic descriptor?
+struct pds
+{
+    static int gid;
+    int id = gid++;
+
+    std::string name;
+
+    pds(const std::string& _name)
+    {
+        name = _name;
+    }
+};
+
+int pds::gid;
+
+std::vector<pds> calculate_asteroid_names_with_random_discovery_year(int min_year, int max_year, const std::vector<orbital*>& orbitals)
+{
+    char skipped_letter = 'i';
+
+    ///no z, no i
+    char letters[] = "abcdefghjklmnopqrstuvwxy";
+    char second_letters[] = "abcdefghjklmnopqrstuvwxyz";
+
+    /*std::vector<int> year_discovered;
+    std::vector<int> half_month_discovered; /// 0 -> 23
+
+    for(auto& o : orbitals)
+    {
+        int ryear = randf_s(minyear, maxyear);
+        int rhalfmonth = randf_s(0, 23 + 1);
+
+        year_discovered.push_back(ryear);
+        half_month_discovered.push_back(rhalfmonth);
+    }*/
+
+    ///map time to id
+    std::vector<std::pair<float, int>> exact_discovery_time;
+
+    //for(auto& o : orbitals)
+    for(int i=0; i<orbitals.size(); i++)
+    {
+        ///not int, we don't need to do +1
+        float exact = randf_s((float)min_year, (float)max_year);
+
+        exact_discovery_time.push_back({exact, i});
+    }
+
+    std::sort(exact_discovery_time.begin(), exact_discovery_time.end());
+
+    std::vector<std::vector<std::vector<std::pair<float, int>>>> binned_discovery_time;
+
+    binned_discovery_time.resize((max_year - min_year));
+
+    for(auto& i : binned_discovery_time)
+    {
+        i.resize(24);
+    }
+
+    for(int i=0; i<exact_discovery_time.size(); i++)
+    {
+        float year = (int)exact_discovery_time[i].first;
+
+        int iyear = clamp(year, min_year, max_year-1);
+
+        float month_frac = exact_discovery_time[i].first - year;
+
+        int half_month = month_frac * 24;
+
+        half_month = clamp(half_month, 0, 23);
+
+        //printf("half month %i\n", half_month);
+
+        std::vector<std::vector<std::pair<float, int>>>& discovery_year = binned_discovery_time[iyear - min_year];
+
+        discovery_year[half_month].push_back({month_frac * 24 - half_month, exact_discovery_time[i].second});
+    }
+
+    for(auto& i : binned_discovery_time)
+    {
+        for(auto& j : i)
+            std::sort(j.begin(), j.end());
+    }
+
+    std::vector<pds> ret_pds;
+
+    int year = min_year;
+
+    for(auto& i : binned_discovery_time)
+    {
+        int half_month = 0;
+
+        int discovery_num = 0;
+
+        for(auto& j : i)
+        {
+            char first_letter = letters[half_month];
+
+            //printf("%i hmth\n", half_month);
+
+            int sl = 0;
+            int num_looped = 0;
+
+            ///all except i;
+            for(auto& a : j)
+            {
+                char second_letter = second_letters[sl % 25];
+                int minor_number = sl / 25;
+
+                std::string str = std::to_string(year) + " " + first_letter + second_letter + " " + std::to_string(minor_number);
+
+                std::cout << str << std::endl;
+
+                ret_pds.push_back(pds(str));
+
+                sl++;
+            }
+
+
+            half_month++;
+        }
+
+        year++;
+    }
+
+    return ret_pds;
+}
+
 ///game design
 ///harvest asteroids for fuel + materials
 ///initial stages have to return physically to earth the resources
@@ -85,6 +217,9 @@ int main()
     sf::RenderWindow win;
     win.create(sf::VideoMode(1200, 800), "hi", sf::Style::Default, settings);
     //win.setVerticalSyncEnabled(true);
+
+
+    ui_manager ui_handler;
 
     manager orbital_manager;
 
@@ -145,6 +280,8 @@ int main()
     voyager_base->mass = 721.9;
     voyager_base->col = {1, 0, 0};
 
+    std::vector<pds> descriptor_list = {pds("sun"), pds("earth"), pds("mercury"), pds("venus"), pds("mars"), pds("jupiter"), pds("saturn"), pds("urectum"), pds("neptune"), pds("pluto")};
+
     std::vector<orbital**> mainstream_orbitals = {&sun, &earth, &mercury, &venus, &mars, &jupiter, &saturn, &uranus, &neptune, &pluto};
 
     ///small reduction in accuracy for probably quite a large speed boost
@@ -153,6 +290,8 @@ int main()
     //orbital_manager.set_unimportant_planet_skip({1, 2, 3, 4, 9});
 
     std::vector<orbital*> asteroids = populate_orbits_with_asteroids(jupiter, sun, 100);
+
+    auto asteroid_names = calculate_asteroid_names_with_random_discovery_year(1960, 2017, asteroids);
 
 
     std::vector<orbital*> player_satellites;
@@ -689,6 +828,31 @@ int main()
 
             if(key.isKeyPressed(sf::Keyboard::F))
                 orbital_manager.plot_orbit(currently_in_control, 1000, win);
+
+            //for(auto& i : orbital_manager.olist)
+            for(int i=0; i<descriptor_list.size(); i++)
+            {
+                pds desc = descriptor_list[i];
+
+                int id = desc.id;
+
+                orbital* o = orbital_manager.olist[id];
+
+                ///uuh.. why does this forget window transformations? Am I dumb?
+                vec2d screen_pos = manager::pos2screen(o->pos) + (vec2d){win.getSize().x/2., win.getSize().y/2.};
+
+                ui_element elem(ui::TEXT);
+                elem.set_relative_pos(conv<double, float>(screen_pos + (vec2d){10, 5}));
+
+                std::string capd = desc.name;
+
+                if(capd.size() > 0)
+                    capd[0] = toupper(capd[0]);
+
+                elem.text = capd;
+
+                elem.draw(win);
+            }
 
             //    orbital_manager.plot_orbit(voyager_base, 1000, win);
 
