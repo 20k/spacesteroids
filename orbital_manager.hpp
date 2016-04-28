@@ -125,6 +125,7 @@ struct manager
 struct arg_s
 {
     int ticks; manager* orbital_manager; float offset; double error_dist; orbital* probe; orbital* target; ret_info* inf;
+    double delay_ticks;
 };
 
 void bisect_wrapper(arg_s arg);

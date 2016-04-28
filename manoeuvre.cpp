@@ -121,19 +121,7 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
         }*/
 
 
-        double delay_ticks = 3000;
-
-        bool in_mainstream = oclone->contains(tclone);
-
-        for(int i=0; i<delay_ticks; i++)
-        {
-            oclone->tick(dt_s, dt_s);
-            oclone->tick_only_probes(dt_s, dt_s, {pclone}, false);
-
-            ///absorption?
-            if(!in_mainstream)
-                oclone->tick_only_probes(dt_s, dt_s, {tclone}, false);
-        }
+        double delay_ticks = 4000;
 
         ///will have target and probe available as arguments
         manv join(target, THREAD_WAITER);
@@ -141,13 +129,10 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         join.set_arg("dticks", delay_ticks);
 
-        ///tick oclone forwards by x ticks
-        ///save that
-
-        ///next add ticks into the future to resolve this
+        ///ticks into the future
         ///then when time_elapsed == that, force block and execute
         ///should probably count ticks in main and pass it here so there's no discrepancy
-        arg_s bargs = {max_len_yr, oclone, test_offset, max_error_distance, pclone, tclone, join.inf};
+        arg_s bargs = {max_len_yr, oclone, test_offset, max_error_distance, pclone, tclone, join.inf, delay_ticks};
 
         //join.intercept_future = std::shared_ptr<std::future<void>>(new std::future<void>(std::async(std::launch::async, bisect_wrapper, bargs)));
 
@@ -155,6 +140,8 @@ std::vector<manv> manv::tick_pre(manager& orbital_manager, orbital* probe, float
 
         //fut.wait();
 
+        ///the fuckin intersections where we dont find anything are totally eating into our calc time
+        ///we need to eliminate things where 3+ refinements change the min_dist by < 1%
         join.intercept_thread = new std::thread(std::bind(bisect_wrapper, bargs));
 
         //join.intercept_thread->join();

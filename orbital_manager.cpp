@@ -933,6 +933,24 @@ void bisect_wrapper(arg_s arg)
 {
     //printf("%f %f  n %f %f\n", EXPAND_2(arg.probe->pos), EXPAND_2(arg.target->pos));
 
+
+    bool in_mainstream = arg.orbital_manager->contains(arg.target);
+
+    ///hmm. should really do this async
+    ///in fact, this is already using all the async bits?
+    ///why am I doing this synchronously?
+    ///if dt_s is not constant, we'll get a very odd situation
+    for(int i=0; i<arg.delay_ticks; i++)
+    {
+        arg.orbital_manager->tick(dt_s, dt_s);
+        arg.orbital_manager->tick_only_probes(dt_s, dt_s, {arg.probe}, false);
+
+        ///absorption?
+        if(!in_mainstream)
+            arg.orbital_manager->tick_only_probes(dt_s, dt_s, {arg.target}, false);
+    }
+
+
     ret_info info = arg.orbital_manager->bisect_with_cache(arg.ticks, dt_s, dt_s,
                     0.1, 0.1, 2000.0,
                     arg.offset, M_PI/2., 3,
